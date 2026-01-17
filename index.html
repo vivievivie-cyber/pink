@@ -14,7 +14,6 @@
         }
         .container { max-width: 700px; margin-top: 20px; }
         
-        /* 卡片樣式美化 */
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .card-header { 
             background: linear-gradient(45deg, #198754, #20c997); 
@@ -24,7 +23,6 @@
             padding: 15px;
         }
         
-        /* 表單項目列樣式 */
         .item-row {
             display: flex;
             justify-content: space-between;
@@ -40,7 +38,7 @@
             line-height: 1.4;
         }
         
-        /* 輸入框樣式 - 重點：大字體方便點擊 */
+        /* 九宮格數字鍵優化 */
         .count-input { 
             width: 80px; 
             text-align: center; 
@@ -49,7 +47,7 @@
             border-radius: 8px;
         }
 
-        /* 統計區塊 */
+        /* 底部統計區 */
         .summary-box {
             position: fixed;
             bottom: 0;
@@ -100,7 +98,7 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label text-muted small">稽查人員姓名</label>
-                                <input type="text" class="form-control form-control-lg" id="inspectorName" placeholder="請輸入姓名" required>
+                                <input type="text" class="form-control form-control-lg" id="inspectorName" placeholder="小強/小明" required>
                             </div>
                         </div>
                     </div>
@@ -108,14 +106,12 @@
 
                 <div class="card">
                     <div class="card-header">一、室外堆置或廢棄容器</div>
-                    <div class="card-body" id="part1_container">
-                        </div>
+                    <div class="card-body" id="part1_container"></div>
                 </div>
 
                 <div class="card">
                     <div class="card-header bg-danger text-white" style="background: linear-gradient(45deg, #dc3545, #ff6b6b);">二、室內外積水容器</div>
-                    <div class="card-body" id="part2_container">
-                        </div>
+                    <div class="card-body" id="part2_container"></div>
                 </div>
 
                 <div class="summary-box">
@@ -138,20 +134,30 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title mb-3">🔎 搜尋紀錄</h5>
-                    <div class="row g-2">
-                        <div class="col-4">
-                            <select class="form-select" id="queryType">
-                                <option value="date">日期</option>
-                                <option value="inspector">人員</option>
-                            </select>
+                    
+                    <div class="mb-3">
+                        <select class="form-select form-select-lg" id="queryType" onchange="toggleQueryInputs()">
+                            <option value="date">📅 依日期區間查詢</option>
+                            <option value="inspector">👤 依人員姓名查詢</option>
+                        </select>
+                    </div>
+
+                    <div id="dateQueryGroup" class="row g-2">
+                        <div class="col-6">
+                            <label class="small text-muted">開始日期</label>
+                            <input type="date" class="form-control" id="startDate">
                         </div>
-                        <div class="col-8">
-                            <input type="text" class="form-control" id="queryValue" placeholder="輸入日期或姓名">
-                        </div>
-                        <div class="col-12 mt-2">
-                            <button class="btn btn-primary w-100" onclick="performQuery()">開始查詢</button>
+                        <div class="col-6">
+                            <label class="small text-muted">結束日期</label>
+                            <input type="date" class="form-control" id="endDate">
                         </div>
                     </div>
+
+                    <div id="inspectorQueryGroup" class="d-none">
+                        <input type="text" class="form-control form-control-lg" id="queryInspectorValue" placeholder="輸入人員姓名 (如：小強)">
+                    </div>
+
+                    <button class="btn btn-primary w-100 mt-3 btn-lg" onclick="performQuery()">查詢</button>
                 </div>
             </div>
 
@@ -179,41 +185,30 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // 定義表單項目 (含編號)
     const itemsPart1 = [
-        "1. 空瓶、空罐...等", 
-        "2. 甕、壺 (陶瓷水缸等)", 
-        "3. 鍋、壺、冷氣接水桶", 
-        "4. 杯子、碟子、盤子、碗、破裂磁器面盆", 
-        "5. 空保麗龍、馬槽水...等", 
-        "6. 桶子 (鐵桶、塑膠桶、寵物水盤)",
-        "7. 椰子殼、椰子葉捲...等", 
-        "8. 廢輪胎", 
-        "9. 廢傢俱", 
-        "10. 廢帆布", 
-        "11. 空地未整理", 
-        "12. 空屋未整理", 
-        "13. 其他 (任何廢棄的容器或雜物)"
+        "1. 空瓶、空罐...等", "2. 甕、壺 (陶瓷水缸等)", "3. 鍋、壺、冷氣接水桶", 
+        "4. 杯子、碟子、盤子、碗、破裂磁器面盆", "5. 空保麗龍、馬槽水...等", "6. 桶子 (鐵桶、塑膠桶、寵物水盤)",
+        "7. 椰子殼、椰子葉捲...等", "8. 廢輪胎", "9. 廢傢俱", "10. 廢帆布", 
+        "11. 空地未整理", "12. 空屋未整理", "13. 其他 (任何廢棄的容器或雜物)"
     ];
 
     const itemsPart2 = [
-        "1. 插花容器 (花盆、花瓶等)", 
-        "2. 貯水容器 (水缸、貯水槽、水桶等)", 
-        "3. 積水的地下室",
-        "4. 輪胎或排水管、水塔", 
-        "5. 冰箱除霜底盤 (水盤)", 
-        "6. 盆栽植物墊盤 (水盤)",
+        "1. 插花容器 (花盆、花瓶等)", "2. 貯水容器 (水缸、貯水槽、水桶等)", "3. 積水的地下室",
+        "4. 輪胎或排水管、水塔", "5. 冰箱除霜底盤 (水盤)", "6. 盆栽植物墊盤 (水盤)",
         "7. 其他 (竹筒、樹洞、溝、人手孔蓋)"
     ];
 
-    // 初始化頁面
     window.onload = function() {
         generateFormFields('part1_container', itemsPart1, 'p1');
         generateFormFields('part2_container', itemsPart2, 'p2');
-        document.getElementById('checkDate').valueAsDate = new Date();
+        
+        // 設定今日日期
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('checkDate').value = today;
+        document.getElementById('startDate').value = today; // 查詢起始預設今天
+        document.getElementById('endDate').value = today;   // 查詢結束預設今天
     };
 
-    // 動態產生輸入欄位 (改為清單式佈局)
     function generateFormFields(containerId, items, prefix) {
         const container = document.getElementById(containerId);
         let html = '';
@@ -221,35 +216,23 @@
             html += `
                 <div class="item-row">
                     <label class="item-label">${item}</label>
-                    <input type="number" 
-                           class="form-control count-input" 
-                           data-group="${prefix}" 
-                           placeholder="0" 
-                           inputmode="numeric" 
-                           pattern="[0-9]*"
-                           onchange="calculateTotal()" 
-                           onfocus="this.select()">
+                    <input type="number" class="form-control count-input" data-group="${prefix}" placeholder="0" inputmode="numeric" pattern="[0-9]*" onchange="calculateTotal()" onfocus="this.select()">
                 </div>
             `;
         });
         container.innerHTML = html;
     }
 
-    // 計算總數
     function calculateTotal() {
         let totalWaste = 0;
         let totalWater = 0;
-
-        // 遍歷所有輸入框，若為空則視為0
         document.querySelectorAll('input[data-group="p1"]').forEach(el => totalWaste += Number(el.value || 0));
         document.querySelectorAll('input[data-group="p2"]').forEach(el => totalWater += Number(el.value || 0));
 
-        // 更新介面
         document.getElementById('totalWaste').innerText = totalWaste;
         document.getElementById('totalWater').innerText = totalWater;
         
         const resultSpan = document.getElementById('finalResult');
-        // 只要有任何一個數量大於0，就是不合格
         if (totalWater > 0 || totalWaste > 0) {
             resultSpan.innerHTML = "不合格 <span style='font-size:1.5rem'>❌</span>";
             resultSpan.className = "fw-bold text-danger";
@@ -259,10 +242,8 @@
         }
     }
 
-    // 表單提交處理
     document.getElementById('inspectionForm').addEventListener('submit', function(e) {
         e.preventDefault();
-
         const data = {
             id: Date.now(),
             date: document.getElementById('checkDate').value,
@@ -276,50 +257,81 @@
         records.push(data);
         localStorage.setItem('dengueRecords', JSON.stringify(records));
 
-        // 使用 Bootstrap Modal 顯示成功訊息 (解決亂碼問題)
-        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-        successModal.show();
+        new bootstrap.Modal(document.getElementById('successModal')).show();
 
-        // 重置表單 (保留日期和地點，通常稽查員會在同一區連續查)
+        // 提交後保留基本資料，僅清除數據
         const currentDate = document.getElementById('checkDate').value;
         const currentLocation = document.getElementById('location').value;
         const currentInspector = document.getElementById('inspectorName').value;
         
         this.reset();
         
-        // 恢復基本資料
         document.getElementById('checkDate').value = currentDate;
         document.getElementById('location').value = currentLocation;
         document.getElementById('inspectorName').value = currentInspector;
-        
-        // 重置計數顯示
         calculateTotal();
     });
 
-    // 查詢功能
+    // 切換查詢輸入框
+    function toggleQueryInputs() {
+        const type = document.getElementById('queryType').value;
+        const dateGroup = document.getElementById('dateQueryGroup');
+        const inspectorGroup = document.getElementById('inspectorQueryGroup');
+
+        if (type === 'date') {
+            dateGroup.classList.remove('d-none');
+            inspectorGroup.classList.add('d-none');
+        } else {
+            dateGroup.classList.add('d-none');
+            inspectorGroup.classList.remove('d-none');
+        }
+    }
+
+    // 執行查詢 (修改為日期區間邏輯)
     function performQuery() {
         const type = document.getElementById('queryType').value;
-        const value = document.getElementById('queryValue').value.trim();
         const resultDiv = document.getElementById('queryResults');
-        
         let records = JSON.parse(localStorage.getItem('dengueRecords')) || [];
         let filtered = [];
 
-        if (!value) {
-            filtered = records.reverse(); // 沒輸入則顯示全部 (新到舊)
-        } else if (type === 'date') {
-            filtered = records.filter(r => r.date === value);
+        if (type === 'date') {
+            // 日期區間篩選
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            
+            if (!start || !end) {
+                alert("請選擇開始與結束日期");
+                return;
+            }
+
+            filtered = records.filter(r => r.date >= start && r.date <= end);
         } else {
+            // 人員模糊搜尋
+            const value = document.getElementById('queryInspectorValue').value.trim();
+            if (!value) {
+                alert("請輸入人員姓名");
+                return;
+            }
             filtered = records.filter(r => r.inspector.includes(value));
         }
 
+        // 排序：新到舊
+        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
         if (filtered.length === 0) {
-            resultDiv.innerHTML = '<div class="alert alert-warning text-center">查無資料</div>';
+            resultDiv.innerHTML = '<div class="alert alert-warning text-center">此區間或人員查無資料</div>';
             return;
         }
 
         let html = '';
+        // 計算該次查詢的總計
+        let sumWaste = 0;
+        let sumWater = 0;
+
         filtered.forEach(r => {
+            sumWaste += Number(r.wasteCount);
+            sumWater += Number(r.waterCount);
+            
             const isBad = (r.waterCount > 0 || r.wasteCount > 0);
             const statusIcon = isBad ? '❌' : '✅';
             const bgClass = isBad ? 'border-danger' : 'border-success';
@@ -333,14 +345,25 @@
                         </div>
                         <div class="text-dark mb-2">📍 ${r.location}</div>
                         <div class="d-flex justify-content-between bg-light p-2 rounded">
-                            <span>廢棄容器: <strong>${r.wasteCount}</strong></span>
-                            <span class="${Number(r.waterCount) > 0 ? 'text-danger fw-bold' : ''}">積水容器: <strong>${r.waterCount}</strong></span>
+                            <span>廢棄: <strong>${r.wasteCount}</strong></span>
+                            <span class="${Number(r.waterCount) > 0 ? 'text-danger fw-bold' : ''}">積水: <strong>${r.waterCount}</strong></span>
                         </div>
                     </div>
                 </div>
             `;
         });
-        resultDiv.innerHTML = html;
+        
+        // 加入查詢結果統計頭部
+        const summaryHeader = `
+            <div class="alert alert-info py-2 mb-3">
+                <div class="row text-center">
+                    <div class="col-6">總筆數: <strong>${filtered.length}</strong></div>
+                    <div class="col-6">積水容器總計: <strong class="text-danger">${sumWater}</strong></div>
+                </div>
+            </div>
+        `;
+
+        resultDiv.innerHTML = summaryHeader + html;
     }
     
     function clearAllData() {
