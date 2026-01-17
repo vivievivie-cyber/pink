@@ -3,61 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登革熱病媒蚊孳生源稽查系統</title>
+    <title>登革熱稽查回報系統 V4</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- 螢幕顯示樣式 (Screen Style) --- */
-        body { 
-            background-color: #f0f2f5; 
-            font-family: 'Noto Sans TC', sans-serif;
-            padding-bottom: 80px; 
-        }
+        /* --- 網頁介面樣式 --- */
+        body { background-color: #f0f2f5; font-family: 'Noto Sans TC', sans-serif; padding-bottom: 100px; }
         .container { max-width: 800px; margin-top: 20px; }
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .card-header { 
-            background: linear-gradient(45deg, #198754, #20c997); 
-            color: white; 
-            font-weight: bold; 
-            border-radius: 12px 12px 0 0 !important; 
-            padding: 15px;
-        }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .item-label { font-size: 0.95rem; color: #333; padding-right: 15px; line-height: 1.4; }
-        .count-input { width: 80px; text-align: center; font-size: 1.2rem; font-weight: bold; border-radius: 8px; }
+        .card-header { background: linear-gradient(45deg, #198754, #20c997); color: white; font-weight: bold; padding: 15px; border-radius: 12px 12px 0 0 !important; }
         
-        /* 底部統計列 */
-        .summary-box {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            padding: 10px 20px; z-index: 1000;
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        /* 列表與輸入框 */
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .item-label { font-size: 0.95rem; color: #333; padding-right: 10px; line-height: 1.4; }
+        .count-input { width: 70px; text-align: center; font-size: 1.2rem; font-weight: bold; border-radius: 8px; border: 1px solid #ced4da; }
+        
+        /* 底部固定統計列 */
+        .summary-box { position: fixed; bottom: 0; left: 0; width: 100%; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); padding: 12px 20px; z-index: 1050; display: flex; justify-content: space-between; align-items: center; }
 
-        /* 陽性列表樣式 */
-        .positive-item { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
-
-        /* --- 列印專用樣式 (Print Style) --- */
+        /* 標籤與按鈕 */
+        .badge-tag { font-size: 0.9em; padding: 5px 10px; border-radius: 20px; margin-right: 5px; background-color: #e9ecef; color: #495057; display: inline-block; margin-bottom: 5px;}
+        
+        /* --- 列印專用樣式 (Print CSS) --- */
         @media print {
-            body * { visibility: hidden; } /* 隱藏原本網頁所有內容 */
-            #print-area, #print-area * { visibility: visible; } /* 只顯示列印區 */
-            #print-area {
-                position: absolute; left: 0; top: 0; width: 100%;
-                background: white; color: black;
-            }
-            .print-page {
-                width: 100%; height: 100vh; page-break-after: always; /* 強制分頁 */
-                padding: 20px; box-sizing: border-box;
-            }
-            .print-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            .print-table th, .print-table td { border: 1px solid black; padding: 6px; font-size: 14px; }
-            .print-header { text-align: center; font-size: 22px; font-weight: bold; margin-bottom: 15px; }
-            .print-footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 16px; }
-            .signature-box { border-bottom: 1px solid black; width: 150px; display: inline-block; }
+            /* 隱藏網頁介面所有元素 */
+            body > *:not(#print-area) { display: none !important; }
+            /* 顯示列印區 */
+            #print-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; background: white; z-index: 9999; }
             
-            /* 調整欄位寬度以符合 PDF */
-            .col-item { width: 75%; text-align: left; }
-            .col-count { width: 25%; text-align: center; }
+            /* 分頁設定 */
+            .print-page { width: 100%; height: 100%; page-break-after: always; padding: 20px; box-sizing: border-box; }
+            .print-page:last-child { page-break-after: auto; }
+            
+            /* 表格樣式 (仿照 PDF) */
+            .check-table { width: 100%; border-collapse: collapse; font-family: "MingLiU", "PMingLiU", serif; } /* 使用細明體仿照公文 */
+            .check-table th, .check-table td { border: 1px solid #000; padding: 4px 8px; font-size: 14px; vertical-align: middle; }
+            .check-header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 10px; font-family: "BiauKai", "DFKai-SB", serif; }
+            .section-title { background-color: #f0f0f0; font-weight: bold; text-align: left; }
+            
+            /* 簽名欄 */
+            .footer-section { margin-top: 20px; display: flex; justify-content: space-between; font-size: 16px; font-family: "BiauKai", serif; }
+            .sign-box { border-bottom: 1px solid #000; width: 180px; display: inline-block; height: 24px; }
         }
         
         /* 平常隱藏列印區 */
@@ -67,11 +53,11 @@
 <body>
 
 <div class="container not-printable">
-    <h3 class="text-center mb-4 fw-bold text-dark">🦟 登革熱病媒蚊孳生源<br>稽查回報與管理系統</h3>
+    <h3 class="text-center mb-4 fw-bold text-dark">🦟 登革熱病媒蚊孳生源<br>稽查管理系統</h3>
 
-    <ul class="nav nav-pills nav-fill mb-4" id="myTab" role="tablist">
+    <ul class="nav nav-pills nav-fill mb-4">
         <li class="nav-item"><button class="nav-link active fw-bold" id="input-tab" data-bs-toggle="tab" data-bs-target="#input-panel">📝 現場稽查與陽性點</button></li>
-        <li class="nav-item"><button class="nav-link fw-bold" id="query-tab" data-bs-toggle="tab" data-bs-target="#query-panel">🔍 成果查詢與報表</button></li>
+        <li class="nav-item"><button class="nav-link fw-bold" id="query-tab" data-bs-toggle="tab" data-bs-target="#query-panel">🔍 成果查詢與列印</button></li>
     </ul>
 
     <div class="tab-content">
@@ -82,28 +68,16 @@
                     <div class="card-header">📍 基本資料</div>
                     <div class="card-body">
                         <div class="row g-3">
+                            <div class="col-12"><label class="text-muted small">稽查日期</label><input type="date" class="form-control" id="checkDate" required></div>
                             <div class="col-12">
-                                <label class="form-label text-muted small">稽查日期</label>
-                                <input type="date" class="form-control" id="checkDate" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label text-muted small">稽查地點</label>
+                                <label class="text-muted small">稽查地點</label>
                                 <div class="row g-2">
-                                    <div class="col-6">
-                                        <select class="form-select" id="districtSelect" required onchange="updateVillages()"><option value="" disabled selected>選擇區</option></select>
-                                    </div>
-                                    <div class="col-6">
-                                        <select class="form-select" id="villageSelect" required><option value="" disabled selected>選擇里</option></select>
-                                    </div>
-                                    <div class="col-12">
-                                        <input type="text" class="form-control" id="detailAddress" placeholder="詳細地點 (如: 公園路123號)" required>
-                                    </div>
+                                    <div class="col-6"><select class="form-select" id="districtSelect" required onchange="updateVillages()"><option value="" disabled selected>選擇區</option></select></div>
+                                    <div class="col-6"><select class="form-select" id="villageSelect" required><option value="" disabled selected>選擇里</option></select></div>
+                                    <div class="col-12"><input type="text" class="form-control" id="detailAddress" placeholder="詳細地址 (如: 公園路123號)" required></div>
                                 </div>
                             </div>
-                            <div class="col-12">
-                                <label class="form-label text-muted small">稽查人員</label>
-                                <input type="text" class="form-control" id="inspectorName" placeholder="小強/小明" required>
-                            </div>
+                            <div class="col-12"><label class="text-muted small">稽查人員</label><input type="text" class="form-control" id="inspectorName" placeholder="小強/小明" required></div>
                         </div>
                     </div>
                 </div>
@@ -118,23 +92,17 @@
                 </div>
 
                 <div class="card border-danger">
-                    <div class="card-header bg-danger text-white">🔥 登革熱病媒蚊陽性孳生源紀錄</div>
+                    <div class="card-header bg-danger text-white">🔥 陽性孳生源紀錄 (需複查)</div>
                     <div class="card-body">
-                        <p class="small text-muted mb-2">若發現陽性容器或孑孓，請在此新增紀錄。</p>
-                        
-                        <div id="positiveList">
-                            </div>
-
-                        <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#addPositiveModal">
-                            ➕ 新增陽性點
-                        </button>
+                        <div id="positiveList" class="mb-3"></div>
+                        <button type="button" class="btn btn-outline-danger w-100" onclick="openPositiveModal()">➕ 新增陽性點</button>
                     </div>
                 </div>
 
                 <div class="summary-box">
                     <div>
-                        <small class="text-muted d-block">陽性判定</small>
-                        <span id="positiveStatus" class="fw-bold text-success">陽性孳生源為 0</span>
+                        <small class="text-muted d-block">狀態</small>
+                        <span id="statusText" class="fw-bold text-success">陽性孳生源為 0</span>
                     </div>
                     <div class="text-end me-3">
                         <small class="text-muted d-block">合計處數</small>
@@ -142,43 +110,31 @@
                     </div>
                     <button type="submit" class="btn btn-primary fw-bold px-4">提交</button>
                 </div>
-                <div style="height: 60px;"></div>
             </form>
         </div>
 
         <div class="tab-pane fade" id="query-panel">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">🔎 條件篩選</h5>
+                    <h5 class="card-title">🔎 搜尋與列印</h5>
                     <div class="row g-2 align-items-end">
-                        <div class="col-4">
-                            <label class="small text-muted">開始日期</label>
-                            <input type="date" class="form-control" id="startDate">
-                        </div>
-                        <div class="col-4">
-                            <label class="small text-muted">結束日期</label>
-                            <input type="date" class="form-control" id="endDate">
-                        </div>
-                        <div class="col-4">
-                            <button class="btn btn-primary w-100" onclick="performQuery()">查詢</button>
-                        </div>
+                        <div class="col-4"><label class="small text-muted">開始</label><input type="date" class="form-control" id="startDate"></div>
+                        <div class="col-4"><label class="small text-muted">結束</label><input type="date" class="form-control" id="endDate"></div>
+                        <div class="col-4"><button class="btn btn-primary w-100" onclick="performQuery()">查詢</button></div>
                     </div>
                 </div>
             </div>
 
             <div class="d-flex justify-content-between mb-2">
-                <div class="form-check ms-2">
+                <div class="form-check ms-2 align-self-center">
                     <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll()">
                     <label class="form-check-label" for="selectAll">全選</label>
                 </div>
-                <button class="btn btn-dark btn-sm" onclick="printSelectedReports()">🖨️ 產出選取報表</button>
+                <button class="btn btn-dark btn-sm" onclick="printSelectedReports()">🖨️ 列印選取報表</button>
             </div>
 
             <div id="queryResults"></div>
-            
-            <div class="text-center mt-5">
-                 <button class="btn btn-outline-secondary btn-sm" onclick="clearAllData()">🗑️ 清除所有資料</button>
-            </div>
+            <div class="text-center mt-5"><button class="btn btn-outline-secondary btn-sm" onclick="clearAllData()">🗑️ 清除所有資料</button></div>
         </div>
     </div>
 </div>
@@ -202,18 +158,44 @@
                         <option value="其他">其他</option>
                     </select>
                 </div>
+                
                 <div class="mb-3">
-                    <label class="form-label">詳細地址/地號</label>
+                    <label class="form-label d-flex justify-content-between">
+                        地址/地號
+                        <div class="form-check form-check-inline m-0">
+                            <input class="form-check-input" type="checkbox" id="sameAddressCheck" onchange="copyAddress()">
+                            <label class="form-check-label small text-primary" for="sameAddressCheck" style="cursor:pointer">📍 同稽查地點</label>
+                        </div>
+                    </label>
                     <input type="text" class="form-control" id="posAddress" placeholder="輸入地址">
                 </div>
+
                 <div class="mb-3">
-                    <label class="form-label">陽性樣態</label>
-                    <input type="text" class="form-control" id="posType" placeholder="例：水桶、花瓶、輪胎">
+                    <label class="form-label">陽性樣態 (可新增多項)</label>
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" id="posTypeInput" placeholder="例如：花瓶">
+                        <button class="btn btn-outline-secondary" type="button" onclick="addTypeTag()">➕ 加入</button>
+                    </div>
+                    <div id="typeTagsContainer" class="p-2 border rounded bg-light" style="min-height: 40px;">
+                        <span class="text-muted small fst-italic" id="noTagsHint">請輸入樣態並點擊加入...</span>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-danger" onclick="addPositiveRecord()">新增</button>
+                <button type="button" class="btn btn-danger" onclick="confirmAddPositive()">確定新增</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="msgModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content text-center">
+            <div class="modal-body p-4">
+                <h5 class="fw-bold mb-3" id="msgTitle">提示</h5>
+                <p id="msgContent" class="mb-4"></p>
+                <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal">確定</button>
             </div>
         </div>
     </div>
@@ -223,10 +205,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // 資料結構
-    let tempPositiveList = []; // 暫存目前的陽性點
+    // --- 資料結構 ---
+    let tempPositiveList = []; // 暫存陽性點 (地點+地址+樣態陣列)
+    let currentTypes = [];     // 暫存正在編輯的單一陽性點的多個樣態
 
-    // 台南市部分區域與里別 (縮減版，可自行擴充)
+    // 行政區資料
     const tainanData = {
         "北區": ["北門里", "大光里", "大港里", "公園里", "開元里", "長榮里"],
         "東區": ["崇學里", "崇明里", "成大里", "東門里"],
@@ -240,7 +223,7 @@
         "1. 空瓶、空罐…等", "2. 甕、壺 (陶瓷水缸等)", "3. 鍋、壺、冷氣接水桶", 
         "4. 杯子、碟子、盤子、碗", "5. 空保麗龍、馬槽水…等", "6. 桶子 (鐵桶、塑膠桶)",
         "7. 椰子殼、椰子葉捲…等", "8. 廢輪胎", "9. 廢傢俱", "10. 廢帆布", 
-        "11. 空地未整理", "12. 空屋未整理", "13. 其他 (任何廢棄容器)"
+        "11. 空地未整理", "12. 空屋未整理", "13. 其他"
     ];
 
     const itemsPart2 = [
@@ -249,6 +232,7 @@
         "7. 其他 (竹筒、樹洞、溝)"
     ];
 
+    // --- 初始化 ---
     window.onload = function() {
         generateFormFields('part1_container', itemsPart1, 'p1');
         generateFormFields('part2_container', itemsPart2, 'p2');
@@ -260,8 +244,13 @@
         document.getElementById('endDate').value = today;
     };
 
-    // --- 1. 介面生成與邏輯 ---
+    function showMsg(title, content) {
+        document.getElementById('msgTitle').innerText = title;
+        document.getElementById('msgContent').innerText = content;
+        new bootstrap.Modal(document.getElementById('msgModal')).show();
+    }
 
+    // --- 1. 介面生成 ---
     function initLocationSelect() {
         const districtSelect = document.getElementById('districtSelect');
         Object.keys(tainanData).forEach(d => {
@@ -307,56 +296,117 @@
 
         document.getElementById('totalWaste').innerText = totalWaste;
         document.getElementById('totalWater').innerText = totalWater;
-        
-        // 判定文字由陽性點邏輯決定，這裡只更新數字
     }
 
-    // --- 2. 陽性點功能 ---
+    // --- 2. 陽性點功能 (核心修改) ---
+    
+    function openPositiveModal() {
+        // 重置 Modal 狀態
+        document.getElementById('posPlace').value = '居家周圍';
+        document.getElementById('posAddress').value = '';
+        document.getElementById('sameAddressCheck').checked = false;
+        document.getElementById('posTypeInput').value = '';
+        document.getElementById('noTagsHint').style.display = 'inline';
+        document.getElementById('typeTagsContainer').innerHTML = '<span class="text-muted small fst-italic" id="noTagsHint">請輸入樣態並點擊加入...</span>';
+        currentTypes = []; // 清空樣態暫存
+        
+        new bootstrap.Modal(document.getElementById('addPositiveModal')).show();
+    }
 
-    function addPositiveRecord() {
+    // 功能 1: 複製地址
+    function copyAddress() {
+        const isChecked = document.getElementById('sameAddressCheck').checked;
+        if (isChecked) {
+            const dist = document.getElementById('districtSelect').value;
+            const vill = document.getElementById('villageSelect').value || "";
+            const detail = document.getElementById('detailAddress').value;
+            if(!dist) { 
+                showMsg("提示", "請先填寫基本資料中的地點"); 
+                document.getElementById('sameAddressCheck').checked = false;
+                return;
+            }
+            document.getElementById('posAddress').value = `${dist}${vill}${detail}`;
+        } else {
+            document.getElementById('posAddress').value = '';
+        }
+    }
+
+    // 功能 2: 新增多個樣態
+    function addTypeTag() {
+        const input = document.getElementById('posTypeInput');
+        const val = input.value.trim();
+        if (val) {
+            currentTypes.push(val);
+            renderTypeTags();
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    function renderTypeTags() {
+        const container = document.getElementById('typeTagsContainer');
+        const hint = document.getElementById('noTagsHint');
+        
+        if (currentTypes.length > 0) hint.style.display = 'none';
+        
+        // 重新渲染標籤
+        let html = '';
+        currentTypes.forEach((type, index) => {
+            html += `<span class="badge-tag">${type} <span style="cursor:pointer; margin-left:5px; color:#aaa;" onclick="removeTypeTag(${index})">&times;</span></span>`;
+        });
+        // 保持 hint 在 DOM 中
+        if (currentTypes.length === 0) html = '<span class="text-muted small fst-italic" id="noTagsHint">請輸入樣態並點擊加入...</span>';
+        container.innerHTML = html;
+    }
+
+    function removeTypeTag(index) {
+        currentTypes.splice(index, 1);
+        renderTypeTags();
+    }
+
+    function confirmAddPositive() {
         const place = document.getElementById('posPlace').value;
         const address = document.getElementById('posAddress').value;
-        const type = document.getElementById('posType').value;
-
-        if(!address || !type) { alert("請填寫完整地址與樣態"); return; }
-
-        tempPositiveList.push({ place, address, type });
-        renderPositiveList();
         
-        // Close modal
-        const modalEl = document.getElementById('addPositiveModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        modal.hide();
+        if(!address) { showMsg("錯誤", "請填寫地址"); return; }
+        if(currentTypes.length === 0) { showMsg("錯誤", "請至少新增一種陽性樣態"); return; }
 
-        // Clear inputs
-        document.getElementById('posAddress').value = '';
-        document.getElementById('posType').value = '';
+        tempPositiveList.push({ 
+            place: place, 
+            address: address, 
+            types: [...currentTypes] // 複製陣列
+        });
+        
+        renderPositiveList();
+        bootstrap.Modal.getInstance(document.getElementById('addPositiveModal')).hide();
     }
 
     function renderPositiveList() {
         const container = document.getElementById('positiveList');
-        const statusSpan = document.getElementById('positiveStatus');
+        const statusText = document.getElementById('statusText');
         
         if (tempPositiveList.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center py-2">目前無陽性點資料</p>';
-            statusSpan.innerText = "陽性孳生源為 0";
-            statusSpan.className = "fw-bold text-success";
+            container.innerHTML = '<p class="text-muted text-center py-2">目前無紀錄</p>';
+            statusText.innerText = "陽性孳生源為 0";
+            statusText.className = "fw-bold text-success";
         } else {
             let html = '';
             tempPositiveList.forEach((item, index) => {
+                const typesString = item.types.join("、");
                 html += `
-                    <div class="positive-item d-flex justify-content-between align-items-center">
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center p-2 mb-2">
                         <div>
-                            <strong>#${index+1} ${item.place}</strong><br>
-                            <span class="small">${item.address} | ${item.type}</span>
+                            <strong>${index+1}. ${item.place}</strong><br>
+                            <small>${item.address}</small><br>
+                            <span class="badge bg-danger">${typesString}</span>
                         </div>
-                        <button class="btn btn-sm btn-outline-danger" onclick="removePositive(${index})">刪除</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="removePositive(${index})">刪除</button>
                     </div>
                 `;
             });
             container.innerHTML = html;
-            statusSpan.innerText = "需複查 ⚠️";
-            statusSpan.className = "fw-bold text-danger";
+            statusText.innerText = "需複查 ⚠️";
+            statusText.className = "fw-bold text-danger";
         }
     }
 
@@ -365,17 +415,14 @@
         renderPositiveList();
     }
 
-    // --- 3. 提交與儲存 ---
-
+    // --- 3. 提交 ---
     document.getElementById('inspectionForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // 收集環境稽查數據 (需保留詳細每個項目的數值以便列印)
         let envData = [];
         document.querySelectorAll('.count-input').forEach(input => {
-            if(input.value > 0) {
-                envData.push({ name: input.getAttribute('data-name'), count: input.value, group: input.getAttribute('data-group') });
-            }
+            // 儲存所有項目，即使是 0 也存，方便列印時填入空白或0
+            envData.push({ name: input.getAttribute('data-name'), count: input.value, group: input.getAttribute('data-group') });
         });
 
         const data = {
@@ -387,17 +434,17 @@
             inspector: document.getElementById('inspectorName').value,
             wasteCount: document.getElementById('totalWaste').innerText,
             waterCount: document.getElementById('totalWater').innerText,
-            positives: [...tempPositiveList], // 複製一份
-            envDetails: envData // 儲存有填寫的項目細節
+            positives: [...tempPositiveList],
+            envDetails: envData
         };
 
-        let records = JSON.parse(localStorage.getItem('dengueRecords_v3')) || [];
+        let records = JSON.parse(localStorage.getItem('dengueRecords_v4')) || [];
         records.push(data);
-        localStorage.setItem('dengueRecords_v3', JSON.stringify(records));
+        localStorage.setItem('dengueRecords_v4', JSON.stringify(records));
 
-        alert("資料已儲存！");
+        showMsg("成功", "資料已儲存！");
         
-        // 重置資料但保留部分欄位
+        // Reset Logic
         const currentDate = document.getElementById('checkDate').value;
         const currentInspector = document.getElementById('inspectorName').value;
         const currentDist = document.getElementById('districtSelect').value;
@@ -406,7 +453,8 @@
         this.reset();
         tempPositiveList = [];
         renderPositiveList();
-
+        
+        // Restore context
         document.getElementById('checkDate').value = currentDate;
         document.getElementById('inspectorName').value = currentInspector;
         document.getElementById('districtSelect').value = currentDist;
@@ -415,17 +463,15 @@
         calculateTotal();
     });
 
-    // --- 4. 查詢與報表 ---
+    // --- 4. 查詢與列印 (重點修復) ---
 
     function performQuery() {
         const start = document.getElementById('startDate').value;
         const end = document.getElementById('endDate').value;
         const resultDiv = document.getElementById('queryResults');
         
-        let records = JSON.parse(localStorage.getItem('dengueRecords_v3')) || [];
-        // 依日期篩選
+        let records = JSON.parse(localStorage.getItem('dengueRecords_v4')) || [];
         let filtered = records.filter(r => r.date >= start && r.date <= end);
-        // 新到舊排序
         filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (filtered.length === 0) {
@@ -435,9 +481,10 @@
 
         let html = '';
         filtered.forEach(r => {
-            // 判斷狀態
             const hasPositive = r.positives && r.positives.length > 0;
-            const statusText = hasPositive ? `<span class="badge bg-danger">需複查 (${r.positives.length}陽性)</span>` : `<span class="badge bg-success">陽性為0</span>`;
+            const statusBadge = hasPositive 
+                ? `<span class="badge bg-danger">需複查 (${r.positives.length}處)</span>` 
+                : `<span class="badge bg-success">陽性為 0</span>`;
 
             html += `
                 <div class="card mb-2">
@@ -447,13 +494,10 @@
                         </div>
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between">
-                                <h6 class="fw-bold mb-1">${r.date} <small class="text-muted">| ${r.district} ${r.village}</small></h6>
-                                ${statusText}
+                                <h6 class="fw-bold mb-1">${r.date} | ${r.district}${r.village}</h6>
+                                ${statusBadge}
                             </div>
-                            <div class="small text-dark mb-1">📍 ${r.address} | 👤 ${r.inspector}</div>
-                            <div class="small text-muted">
-                                廢棄容器: ${r.wasteCount} | 積水容器: ${r.waterCount}
-                            </div>
+                            <div class="small text-muted mb-1">${r.address} (稽查員: ${r.inspector})</div>
                         </div>
                     </div>
                 </div>
@@ -467,109 +511,151 @@
         document.querySelectorAll('.report-check').forEach(ck => ck.checked = checked);
     }
 
-    // --- 5. 列印邏輯 (核心功能) ---
-
+    // 列印功能：產出 HTML 並列印
     function printSelectedReports() {
         const checkboxes = document.querySelectorAll('.report-check:checked');
-        if (checkboxes.length === 0) { alert("請先勾選要列印的資料"); return; }
+        if (checkboxes.length === 0) { showMsg("提示", "請勾選要列印的資料"); return; }
 
-        const allRecords = JSON.parse(localStorage.getItem('dengueRecords_v3')) || [];
+        const allRecords = JSON.parse(localStorage.getItem('dengueRecords_v4')) || [];
         const printArea = document.getElementById('print-area');
-        printArea.innerHTML = ''; // 清空列印區
+        printArea.innerHTML = ''; 
 
         checkboxes.forEach(box => {
             const id = parseInt(box.value);
             const data = allRecords.find(r => r.id === id);
             if(data) {
-                printArea.innerHTML += generatePrintPage(data);
+                printArea.innerHTML += generatePrintHtml(data);
             }
         });
 
-        // 觸發瀏覽器列印
-        window.print();
+        // 延遲一點點確保 DOM 渲染完成
+        setTimeout(() => {
+            window.print();
+        }, 500);
     }
 
-    // 產生單頁報表 HTML (依照上傳的環境複查表格式)
-    function generatePrintPage(data) {
-        // 準備各項目的數值 (從 envDetails 或預設 0)
-        const getCount = (itemName) => {
-            const item = data.envDetails.find(i => i.name.startsWith(itemName));
-            return item ? item.count : "";
+    function generatePrintHtml(data) {
+        // Helper to find count
+        const getVal = (itemName) => {
+            const found = data.envDetails.find(i => i.name.startsWith(itemName));
+            return (found && found.count > 0) ? found.count : ""; // 若為0則留白或顯示空
         };
 
-        // 陽性點列表字串化
-        let positiveText = "";
-        if (data.positives.length > 0) {
-            positiveText = "<br><strong>[陽性孳生源紀錄]:</strong><br>";
-            data.positives.forEach((p, i) => {
-                positiveText += `${i+1}. ${p.place}-${p.type} (${p.address})<br>`;
-            });
-        }
-
-        return `
+        // 1. 環境複查表 HTML (第一頁)
+        let page1 = `
         <div class="print-page">
-            <div class="print-header">臺南市政府登革熱病媒蚊孳生源檢查表</div>
+            <div class="check-header">臺南市政府登革熱病媒蚊孳生源檢查表</div>
             <div style="font-size: 16px; margin-bottom: 5px;">
                 <strong>檢查地點:</strong> ${data.district} ${data.village} ${data.address}
             </div>
             
-            <table class="print-table">
+            <table class="check-table">
                 <thead>
                     <tr>
-                        <th class="col-item">一、室外堆置或廢棄下列容器或雜物，未清除或未整理維護</th>
-                        <th class="col-count">數量</th>
+                        <th style="width: 75%; text-align: left;">一、室外堆置或廢棄下列容器或雜物，未清除或未整理維護</th>
+                        <th style="width: 25%;">處</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td>1. 空瓶、空罐...等</td><td class="text-center">${getCount("1.")}</td></tr>
-                    <tr><td>2. 甕、壺 (陶瓷水缸等)</td><td class="text-center">${getCount("2.")}</td></tr>
-                    <tr><td>3. 鍋、壺、冷氣接水桶</td><td class="text-center">${getCount("3.")}</td></tr>
-                    <tr><td>4. 杯子、碟子、盤子、碗</td><td class="text-center">${getCount("4.")}</td></tr>
-                    <tr><td>5. 空保麗龍、馬槽水</td><td class="text-center">${getCount("5.")}</td></tr>
-                    <tr><td>6. 桶子 (鐵/塑膠桶)</td><td class="text-center">${getCount("6.")}</td></tr>
-                    <tr><td>7. 椰子殼、椰子葉捲</td><td class="text-center">${getCount("7.")}</td></tr>
-                    <tr><td>8. 廢輪胎</td><td class="text-center">${getCount("8.")}</td></tr>
-                    <tr><td>9. 廢傢俱</td><td class="text-center">${getCount("9.")}</td></tr>
-                    <tr><td>10. 廢帆布</td><td class="text-center">${getCount("10.")}</td></tr>
-                    <tr><td>11. 空地未整理</td><td class="text-center">${getCount("11.")}</td></tr>
-                    <tr><td>12. 空屋未整理</td><td class="text-center">${getCount("12.")}</td></tr>
-                    <tr><td>13. 其他</td><td class="text-center">${getCount("13.")}</td></tr>
-                    <tr>
-                        <th class="col-item" style="background:#eee">二、室內外發現下列容器、雜物或場所積水未洗刷乾淨</th>
-                        <th class="col-count" style="background:#eee">數量</th>
-                    </tr>
-                    <tr><td>1. 插花容器 (花盆、花瓶)</td><td class="text-center">${getCount("1.")}</td></tr>
-                    <tr><td>2. 貯水容器 (水缸、桶)</td><td class="text-center">${getCount("2.")}</td></tr>
-                    <tr><td>3. 積水的地下室</td><td class="text-center">${getCount("3.")}</td></tr>
-                    <tr><td>4. 輪胎或排水管、水塔</td><td class="text-center">${getCount("4.")}</td></tr>
-                    <tr><td>5. 冰箱除霜底盤</td><td class="text-center">${getCount("5.")}</td></tr>
-                    <tr><td>6. 盆栽植物墊盤</td><td class="text-center">${getCount("6.")}</td></tr>
-                    <tr><td>7. 其他 (竹筒、溝、樹洞)</td><td class="text-center">${getCount("7.")}</td></tr>
+                    <tr><td>1、空瓶、空罐…等</td><td class="text-center">${getVal("1.")}</td></tr>
+                    <tr><td>2、甕、壺(陶瓷水缸等)</td><td class="text-center">${getVal("2.")}</td></tr>
+                    <tr><td>3、鍋、壺、冷氣接水桶</td><td class="text-center">${getVal("3.")}</td></tr>
+                    <tr><td>4、杯子、碟子、盤子、碗、破裂磁器面盆</td><td class="text-center">${getVal("4.")}</td></tr>
+                    <tr><td>5、空保麗龍、馬槽水………等</td><td class="text-center">${getVal("5.")}</td></tr>
+                    <tr><td>6、桶子(鐵桶、塑膠桶、寵物水盤)</td><td class="text-center">${getVal("6.")}</td></tr>
+                    <tr><td>7、椰子殼、椰子葉捲、……等</td><td class="text-center">${getVal("7.")}</td></tr>
+                    <tr><td>8、廢輪胎</td><td class="text-center">${getVal("8.")}</td></tr>
+                    <tr><td>9、廢傢俱</td><td class="text-center">${getVal("9.")}</td></tr>
+                    <tr><td>10、廢帆布</td><td class="text-center">${getVal("10.")}</td></tr>
+                    <tr><td>11、空地未整理</td><td class="text-center">${getVal("11.")}</td></tr>
+                    <tr><td>12、空屋未整理</td><td class="text-center">${getVal("12.")}</td></tr>
+                    <tr><td>13、其他(任何廢棄的容器或雜物)</td><td class="text-center">${getVal("13.")}</td></tr>
+                    <tr class="section-title"><td colspan="2">二、室內外發現下列容器、雜物或場所積水未洗刷乾淨</td></tr>
+                    <tr><td>1、插花容器(花盆、花瓶等)</td><td class="text-center">${getVal("1.")}</td></tr>
+                    <tr><td>2、貯水容器(水缸、貯水槽、水桶等)</td><td class="text-center">${getVal("2.")}</td></tr>
+                    <tr><td>3、積水的地下室</td><td class="text-center">${getVal("3.")}</td></tr>
+                    <tr><td>4、輪胎或排水管、水塔</td><td class="text-center">${getVal("4.")}</td></tr>
+                    <tr><td>5、冰箱除霜底盤(水盤)</td><td class="text-center">${getVal("5.")}</td></tr>
+                    <tr><td>6、盆栽植物墊盤(水盤)</td><td class="text-center">${getVal("6.")}</td></tr>
+                    <tr><td>7、其他(竹筒、樹洞、溝、人手孔蓋..等)</td><td class="text-center">${getVal("7.")}</td></tr>
                 </tbody>
             </table>
 
             <div style="margin-top: 10px; border: 1px solid black; padding: 10px;">
-                <strong>總計:</strong> 廢棄容器 ${data.wasteCount} 處 / 積水容器 ${data.waterCount} 處
-                ${positiveText}
+                <div style="display:flex; justify-content:space-between;">
+                    <span><strong>總計:</strong> 積水容器 ${data.waterCount} 處</span>
+                    <span>判定: ${data.positives.length > 0 ? "不合格 ❌" : "合格 ⭕"}</span>
+                </div>
             </div>
 
-            <div class="print-footer">
+            <div class="footer-section">
                 <div>
-                    <div>環保/公所機關檢查人簽名:</div>
-                    <div class="signature-box" style="height:50px;"></div>
+                    <div>環保機關/公所機關檢查人簽名:</div>
+                    <div class="sign-box"></div>
                 </div>
                 <div>
                     <div>檢查日期: ${data.date}</div>
-                    <div style="margin-top:10px;">檢查員簽名: <span style="font-family:KV_OCR; font-size:18px;">${data.inspector}</span></div>
+                    <div style="margin-top:10px;">檢查員簽名: <span style="font-size:18px;">${data.inspector}</span></div>
                 </div>
             </div>
         </div>
         `;
+
+        // 2. 陽性孳生源清單 HTML (如果有陽性點，生成第二頁)
+        let page2 = "";
+        if (data.positives.length > 0) {
+            let rows = "";
+            data.positives.forEach((p, idx) => {
+                // 將樣態陣列轉為字串
+                let typeStr = p.types.join("、");
+                rows += `
+                    <tr>
+                        <td class="text-center">${idx + 1}</td>
+                        <td>${p.place}</td>
+                        <td>${p.address}</td>
+                        <td>${typeStr}</td>
+                    </tr>
+                `;
+            });
+
+            // 補滿空行以美觀
+            for(let i=data.positives.length; i<10; i++) {
+                rows += `<tr><td>${i+1}</td><td></td><td></td><td></td></tr>`;
+            }
+
+            page2 = `
+            <div class="print-page">
+                <div class="check-header">登革熱病媒蚊陽性孳生源紀錄表</div>
+                <div style="font-size: 16px; margin-bottom: 5px;">
+                     <strong>行政區:</strong> ${data.district} ${data.village}
+                </div>
+                <table class="check-table">
+                    <thead>
+                        <tr style="background:#eee;">
+                            <th style="width:10%">陽性點</th>
+                            <th style="width:20%">違規場域</th>
+                            <th style="width:40%">地址 (或地號)</th>
+                            <th style="width:30%">陽性樣態 (容器種類)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+                <div class="footer-section" style="margin-top:20px;">
+                     <div>製表日期: ${data.date}</div>
+                     <div>稽查員: ${data.inspector}</div>
+                </div>
+            </div>
+            `;
+        }
+
+        return page1 + page2;
     }
 
     function clearAllData() {
-        if(confirm("確定要清空資料庫嗎？")) {
-            localStorage.removeItem('dengueRecords_v3');
+        if(confirm("確定要清空所有資料嗎？")) {
+            localStorage.removeItem('dengueRecords_v4');
             document.getElementById('queryResults').innerHTML = '';
         }
     }
