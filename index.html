@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登革熱稽查回報系統 V8</title>
+    <title>登革熱稽查回報系統 V9</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- 網頁介面樣式 (螢幕看得到的) --- */
+        /* --- 網頁介面樣式 --- */
         body { background-color: #f0f2f5; font-family: 'Noto Sans TC', sans-serif; padding-bottom: 100px; }
         .container { max-width: 800px; margin-top: 20px; }
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
@@ -22,15 +22,13 @@
         .badge-tag { font-size: 0.95em; padding: 6px 12px; border-radius: 20px; margin: 4px; background-color: #e9ecef; color: #495057; display: inline-flex; align-items: center; border: 1px solid #ced4da;}
         .type-tags-container { display: flex; flex-wrap: wrap; align-content: flex-start; }
 
-        /* --- 列印專用樣式 (Print CSS) - 核心修正區 --- */
+        /* --- 列印專用樣式 (Print CSS) - V9 修正區 --- */
         @media print {
-            /* 1. 重置瀏覽器列印預設值 */
+            /* 1. 設定紙張為 A4 */
             @page { margin: 0; size: A4 portrait; }
             
-            /* 2. 隱藏所有非列印區元素 */
             body > *:not(#print-area) { display: none !important; }
             
-            /* 3. 顯示列印區 */
             #print-area { 
                 display: block !important; 
                 position: absolute; 
@@ -41,41 +39,44 @@
                 z-index: 9999; 
             }
             
-            /* 4. 強制分頁設定 (使用 height: 100vh 確保佔滿一頁) */
+            /* 2. 頁面容器設定 - 縮小 Padding */
             .print-page { 
-                width: 100%; 
-                height: 100vh; /* 關鍵：強制高度撐滿一頁 */
-                page-break-after: always; /* 舊版瀏覽器 */
-                break-after: page;        /* 新版瀏覽器 */
-                padding: 1.5cm;           /* 設定邊距 */
+                width: 210mm;  /* A4 寬 */
+                height: 296mm; /* A4 高 (預留微小容錯) */
+                page-break-after: always;
+                break-after: page;
+                padding: 10mm 15mm; /* 上下 1cm, 左右 1.5cm */
                 box-sizing: border-box; 
-                display: flex;            /* 使用 Flexbox 排版 */
-                flex-direction: column;   /* 垂直排列 */
-                justify-content: space-between; /* 內容靠上，頁尾靠下 */
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between; /* 確保 footer 置底 */
+                position: relative;
             }
             
-            /* 最後一頁取消分頁，避免多出一張白紙 */
             .print-page:last-child {
                 page-break-after: auto;
                 break-after: auto;
-                height: auto; /* 最後一頁高度自動 */
-                min-height: 100vh;
             }
             
-            /* 表格與文字樣式 */
+            /* 3. 表格樣式 - 縮小行高以節省空間 */
             .check-table { width: 100%; border-collapse: collapse; font-family: "MingLiU", "PMingLiU", serif; }
-            .check-table th, .check-table td { border: 1px solid #000; padding: 4px 8px; font-size: 14px; vertical-align: middle; }
-            .check-header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 10px; font-family: "BiauKai", "DFKai-SB", serif; }
-            .section-title { background-color: #f0f0f0; font-weight: bold; text-align: left; }
+            .check-table th, .check-table td { 
+                border: 1px solid #000; 
+                padding: 2px 5px; /* V9修正：縮小內距，讓表格更緊湊 */
+                font-size: 14px; 
+                vertical-align: middle; 
+                line-height: 1.3;
+            }
+            .check-header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 5px; font-family: "BiauKai", "DFKai-SB", serif; }
+            .section-title { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 3px !important; }
             
-            /* 頁面內容區 (表格) */
             .page-content { flex-grow: 1; }
 
-            /* 頁尾/簽名區 (固定在底部) */
-            .page-footer { margin-top: 20px; }
+            /* 頁尾/簽名區 */
+            .page-footer { margin-top: 10px; }
             .footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-family: "BiauKai", serif; font-size: 16px; }
-            .sign-line { border-bottom: 1px solid #000; display: inline-block; width: 150px; height: 24px; }
-            .result-box { margin-bottom: 15px; padding: 10px; border: 2px solid #000; font-size: 18px; font-family: "BiauKai", serif; font-weight: bold; }
+            .sign-line { border-bottom: 1px solid #000; display: inline-block; width: 140px; height: 24px; }
+            .result-box { margin-bottom: 10px; padding: 5px 10px; border: 2px solid #000; font-size: 16px; font-family: "BiauKai", serif; font-weight: bold; }
         }
         
         #print-area { display: none; }
@@ -472,9 +473,9 @@
             envDetails: envData
         };
 
-        let records = JSON.parse(localStorage.getItem('dengueRecords_v7')) || [];
+        let records = JSON.parse(localStorage.getItem('dengueRecords_v9')) || [];
         records.push(data);
-        localStorage.setItem('dengueRecords_v7', JSON.stringify(records));
+        localStorage.setItem('dengueRecords_v9', JSON.stringify(records));
         showMsg("成功", "資料已儲存！");
         
         const backupDate = document.getElementById('checkDate').value;
@@ -511,7 +512,7 @@
     function performQuery() {
         const type = document.getElementById('queryType').value;
         const resultDiv = document.getElementById('queryResults');
-        let records = JSON.parse(localStorage.getItem('dengueRecords_v7')) || [];
+        let records = JSON.parse(localStorage.getItem('dengueRecords_v9')) || [];
         let filtered = [];
 
         if (type === 'date') {
@@ -568,7 +569,7 @@
     function printSelectedReports() {
         const checkboxes = document.querySelectorAll('.report-check:checked');
         if (checkboxes.length === 0) { showMsg("提示", "請勾選要列印的資料"); return; }
-        const allRecords = JSON.parse(localStorage.getItem('dengueRecords_v7')) || [];
+        const allRecords = JSON.parse(localStorage.getItem('dengueRecords_v9')) || [];
         const printArea = document.getElementById('print-area');
         printArea.innerHTML = ''; 
 
@@ -579,7 +580,7 @@
         setTimeout(() => window.print(), 500);
     }
 
-    // 核心修正：報表生成邏輯 (使用 Flexbox 版面控制)
+    // 核心修正：報表生成邏輯
     function generatePrintHtml(data) {
         const getCountByFullName = (fullName) => {
             const found = data.envDetails.find(i => i.name === fullName);
@@ -588,21 +589,19 @@
 
         const pCount = data.totalPositiveCount || 0;
 
-        // 生成 Part 1 表格行
         let rowsPart1 = "";
         itemsPart1.forEach(item => {
             const val = getCountByFullName(item);
             rowsPart1 += `<tr><td>${item}</td><td class="text-center">${val}</td></tr>`;
         });
 
-        // 生成 Part 2 表格行
         let rowsPart2 = "";
         itemsPart2.forEach(item => {
             const val = getCountByFullName(item);
             rowsPart2 += `<tr><td>${item}</td><td class="text-center">${val}</td></tr>`;
         });
 
-        // Page 1
+        // Page 1: Inspection
         let page1 = `
         <div class="print-page">
             <div class="page-content">
@@ -624,7 +623,7 @@
                         ${rowsPart2}
                     </tbody>
                 </table>
-                <div style="margin-top: 10px; border: 1px solid black; padding: 10px;">
+                <div style="margin-top: 5px; border: 1px solid black; padding: 5px;">
                     <span><strong>總計:</strong> 廢棄容器 ${data.wasteCount} 處 / 積水容器 ${data.waterCount} 處</span>
                 </div>
             </div>
@@ -645,7 +644,7 @@
         </div>
         `;
 
-        // Page 2
+        // Page 2: Positive List
         let page2 = "";
         if (pCount > 0) {
             let rows = "";
@@ -664,7 +663,8 @@
                 });
             });
 
-            for(let i=itemIndex; i<=10; i++) {
+            // V9修正：增加到20列
+            for(let i=itemIndex; i<=20; i++) {
                 rows += `<tr><td>${i}</td><td></td><td></td><td></td></tr>`;
             }
 
@@ -706,7 +706,7 @@
 
     function clearAllData() {
         if(confirm("確定刪除所有資料？")) {
-            localStorage.removeItem('dengueRecords_v7');
+            localStorage.removeItem('dengueRecords_v9');
             document.getElementById('queryResults').innerHTML = '';
         }
     }
