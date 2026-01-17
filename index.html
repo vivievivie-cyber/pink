@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登革熱稽查回報系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f0f2f5; 
+            font-family: 'Noto Sans TC', sans-serif;
+            padding-bottom: 80px; 
+        }
+        .container { max-width: 700px; margin-top: 20px; }
+        
+        /* 卡片樣式美化 */
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-header { 
+            background: linear-gradient(45deg, #198754, #20c997); 
+            color: white; 
+            font-weight: bold; 
+            border-radius: 12px 12px 0 0 !important; 
+            padding: 15px;
+        }
+        
+        /* 表單項目列樣式 */
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .item-row:last-child { border-bottom: none; }
+        .item-label { 
+            font-size: 0.95rem; 
+            color: #333; 
+            padding-right: 15px;
+            line-height: 1.4;
+        }
+        
+        /* 輸入框樣式 - 重點：大字體方便點擊 */
+        .count-input { 
+            width: 80px; 
+            text-align: center; 
+            font-size: 1.2rem; 
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        /* 統計區塊 */
+        .summary-box {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            padding: 10px 20px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-pills .nav-link.active { background-color: #198754; }
+        .nav-pills .nav-link { color: #198754; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h3 class="text-center mb-4 fw-bold text-dark">🦟 登革熱病媒蚊孳生源<br>環境複查紀錄表</h3>
+
+    <ul class="nav nav-pills nav-fill mb-4" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="input-tab" data-bs-toggle="tab" data-bs-target="#input-panel" type="button">📝 現場稽查</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="query-tab" data-bs-toggle="tab" data-bs-target="#query-panel" type="button">🔍 成果查詢</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="input-panel">
+            <form id="inspectionForm">
+                
+                <div class="card">
+                    <div class="card-header">📍 基本資料</div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label text-muted small">稽查日期</label>
+                                <input type="date" class="form-control form-control-lg" id="checkDate" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">稽查地點 (區/里)</label>
+                                <input type="text" class="form-control form-control-lg" id="location" placeholder="例如：北區 北門里" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small">稽查人員姓名</label>
+                                <input type="text" class="form-control form-control-lg" id="inspectorName" placeholder="請輸入姓名" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">一、室外堆置或廢棄容器</div>
+                    <div class="card-body" id="part1_container">
+                        </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-danger text-white" style="background: linear-gradient(45deg, #dc3545, #ff6b6b);">二、室內外積水容器</div>
+                    <div class="card-body" id="part2_container">
+                        </div>
+                </div>
+
+                <div class="summary-box">
+                    <div>
+                        <small class="text-muted d-block">判定結果</small>
+                        <span id="finalResult" class="fw-bold text-success" style="font-size: 1.2rem;">合格 ✅</span>
+                    </div>
+                    <div class="text-end me-3">
+                        <small class="text-muted d-block">合計處數</small>
+                        <span class="fw-bold">廢 <span id="totalWaste" class="text-primary">0</span> / 水 <span id="totalWater" class="text-danger">0</span></span>
+                    </div>
+                    <button type="submit" class="btn btn-success fw-bold px-4">提交</button>
+                </div>
+                
+                <div style="height: 60px;"></div>
+            </form>
+        </div>
+
+        <div class="tab-pane fade" id="query-panel">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">🔎 搜尋紀錄</h5>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <select class="form-select" id="queryType">
+                                <option value="date">日期</option>
+                                <option value="inspector">人員</option>
+                            </select>
+                        </div>
+                        <div class="col-8">
+                            <input type="text" class="form-control" id="queryValue" placeholder="輸入日期或姓名">
+                        </div>
+                        <div class="col-12 mt-2">
+                            <button class="btn btn-primary w-100" onclick="performQuery()">開始查詢</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="queryResults" class="mt-3"></div>
+            <div class="text-center mt-5">
+                 <button class="btn btn-outline-secondary btn-sm" onclick="clearAllData()">🗑️ 清除所有測試資料</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center">
+      <div class="modal-body p-4">
+        <div class="mb-3" style="font-size: 3rem;">🎉</div>
+        <h4 class="fw-bold text-success mb-2">回報成功！</h4>
+        <p class="text-muted">資料已儲存至系統。</p>
+        <button type="button" class="btn btn-success w-100" data-bs-dismiss="modal">確定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // 定義表單項目 (含編號)
+    const itemsPart1 = [
+        "1. 空瓶、空罐...等", 
+        "2. 甕、壺 (陶瓷水缸等)", 
+        "3. 鍋、壺、冷氣接水桶", 
+        "4. 杯子、碟子、盤子、碗、破裂磁器面盆", 
+        "5. 空保麗龍、馬槽水...等", 
+        "6. 桶子 (鐵桶、塑膠桶、寵物水盤)",
+        "7. 椰子殼、椰子葉捲...等", 
+        "8. 廢輪胎", 
+        "9. 廢傢俱", 
+        "10. 廢帆布", 
+        "11. 空地未整理", 
+        "12. 空屋未整理", 
+        "13. 其他 (任何廢棄的容器或雜物)"
+    ];
+
+    const itemsPart2 = [
+        "1. 插花容器 (花盆、花瓶等)", 
+        "2. 貯水容器 (水缸、貯水槽、水桶等)", 
+        "3. 積水的地下室",
+        "4. 輪胎或排水管、水塔", 
+        "5. 冰箱除霜底盤 (水盤)", 
+        "6. 盆栽植物墊盤 (水盤)",
+        "7. 其他 (竹筒、樹洞、溝、人手孔蓋)"
+    ];
+
+    // 初始化頁面
+    window.onload = function() {
+        generateFormFields('part1_container', itemsPart1, 'p1');
+        generateFormFields('part2_container', itemsPart2, 'p2');
+        document.getElementById('checkDate').valueAsDate = new Date();
+    };
+
+    // 動態產生輸入欄位 (改為清單式佈局)
+    function generateFormFields(containerId, items, prefix) {
+        const container = document.getElementById(containerId);
+        let html = '';
+        items.forEach((item, index) => {
+            html += `
+                <div class="item-row">
+                    <label class="item-label">${item}</label>
+                    <input type="number" 
+                           class="form-control count-input" 
+                           data-group="${prefix}" 
+                           placeholder="0" 
+                           inputmode="numeric" 
+                           pattern="[0-9]*"
+                           onchange="calculateTotal()" 
+                           onfocus="this.select()">
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    // 計算總數
+    function calculateTotal() {
+        let totalWaste = 0;
+        let totalWater = 0;
+
+        // 遍歷所有輸入框，若為空則視為0
+        document.querySelectorAll('input[data-group="p1"]').forEach(el => totalWaste += Number(el.value || 0));
+        document.querySelectorAll('input[data-group="p2"]').forEach(el => totalWater += Number(el.value || 0));
+
+        // 更新介面
+        document.getElementById('totalWaste').innerText = totalWaste;
+        document.getElementById('totalWater').innerText = totalWater;
+        
+        const resultSpan = document.getElementById('finalResult');
+        // 只要有任何一個數量大於0，就是不合格
+        if (totalWater > 0 || totalWaste > 0) {
+            resultSpan.innerHTML = "不合格 <span style='font-size:1.5rem'>❌</span>";
+            resultSpan.className = "fw-bold text-danger";
+        } else {
+            resultSpan.innerHTML = "合格 <span style='font-size:1.5rem'>✅</span>";
+            resultSpan.className = "fw-bold text-success";
+        }
+    }
+
+    // 表單提交處理
+    document.getElementById('inspectionForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const data = {
+            id: Date.now(),
+            date: document.getElementById('checkDate').value,
+            location: document.getElementById('location').value,
+            inspector: document.getElementById('inspectorName').value,
+            wasteCount: document.getElementById('totalWaste').innerText,
+            waterCount: document.getElementById('totalWater').innerText
+        };
+
+        let records = JSON.parse(localStorage.getItem('dengueRecords')) || [];
+        records.push(data);
+        localStorage.setItem('dengueRecords', JSON.stringify(records));
+
+        // 使用 Bootstrap Modal 顯示成功訊息 (解決亂碼問題)
+        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        successModal.show();
+
+        // 重置表單 (保留日期和地點，通常稽查員會在同一區連續查)
+        const currentDate = document.getElementById('checkDate').value;
+        const currentLocation = document.getElementById('location').value;
+        const currentInspector = document.getElementById('inspectorName').value;
+        
+        this.reset();
+        
+        // 恢復基本資料
+        document.getElementById('checkDate').value = currentDate;
+        document.getElementById('location').value = currentLocation;
+        document.getElementById('inspectorName').value = currentInspector;
+        
+        // 重置計數顯示
+        calculateTotal();
+    });
+
+    // 查詢功能
+    function performQuery() {
+        const type = document.getElementById('queryType').value;
+        const value = document.getElementById('queryValue').value.trim();
+        const resultDiv = document.getElementById('queryResults');
+        
+        let records = JSON.parse(localStorage.getItem('dengueRecords')) || [];
+        let filtered = [];
+
+        if (!value) {
+            filtered = records.reverse(); // 沒輸入則顯示全部 (新到舊)
+        } else if (type === 'date') {
+            filtered = records.filter(r => r.date === value);
+        } else {
+            filtered = records.filter(r => r.inspector.includes(value));
+        }
+
+        if (filtered.length === 0) {
+            resultDiv.innerHTML = '<div class="alert alert-warning text-center">查無資料</div>';
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(r => {
+            const isBad = (r.waterCount > 0 || r.wasteCount > 0);
+            const statusIcon = isBad ? '❌' : '✅';
+            const bgClass = isBad ? 'border-danger' : 'border-success';
+            
+            html += `
+                <div class="card ${bgClass} mb-2">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="fw-bold mb-1">${r.date} <small class="text-muted fw-normal">| ${r.inspector}</small></h6>
+                            <span class="fs-5">${statusIcon}</span>
+                        </div>
+                        <div class="text-dark mb-2">📍 ${r.location}</div>
+                        <div class="d-flex justify-content-between bg-light p-2 rounded">
+                            <span>廢棄容器: <strong>${r.wasteCount}</strong></span>
+                            <span class="${Number(r.waterCount) > 0 ? 'text-danger fw-bold' : ''}">積水容器: <strong>${r.waterCount}</strong></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        resultDiv.innerHTML = html;
+    }
+    
+    function clearAllData() {
+        if(confirm("確定要刪除手機內所有歷史資料嗎？")) {
+            localStorage.removeItem('dengueRecords');
+            document.getElementById('queryResults').innerHTML = '';
+        }
+    }
+</script>
+
+</body>
+</html>
