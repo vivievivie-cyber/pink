@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登革熱稽查回報系統 V4</title>
+    <title>登革熱稽查回報系統 V5</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -13,7 +13,6 @@
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .card-header { background: linear-gradient(45deg, #198754, #20c997); color: white; font-weight: bold; padding: 15px; border-radius: 12px 12px 0 0 !important; }
         
-        /* 列表與輸入框 */
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .item-label { font-size: 0.95rem; color: #333; padding-right: 10px; line-height: 1.4; }
         .count-input { width: 70px; text-align: center; font-size: 1.2rem; font-weight: bold; border-radius: 8px; border: 1px solid #ced4da; }
@@ -21,32 +20,25 @@
         /* 底部固定統計列 */
         .summary-box { position: fixed; bottom: 0; left: 0; width: 100%; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); padding: 12px 20px; z-index: 1050; display: flex; justify-content: space-between; align-items: center; }
 
-        /* 標籤與按鈕 */
-        .badge-tag { font-size: 0.9em; padding: 5px 10px; border-radius: 20px; margin-right: 5px; background-color: #e9ecef; color: #495057; display: inline-block; margin-bottom: 5px;}
+        /* 標籤 */
+        .badge-tag { font-size: 0.9em; padding: 5px 10px; border-radius: 20px; margin-right: 5px; background-color: #e9ecef; color: #495057; display: inline-block; margin-bottom: 5px; border: 1px solid #ced4da;}
         
         /* --- 列印專用樣式 (Print CSS) --- */
         @media print {
-            /* 隱藏網頁介面所有元素 */
             body > *:not(#print-area) { display: none !important; }
-            /* 顯示列印區 */
             #print-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; background: white; z-index: 9999; }
-            
-            /* 分頁設定 */
             .print-page { width: 100%; height: 100%; page-break-after: always; padding: 20px; box-sizing: border-box; }
             .print-page:last-child { page-break-after: auto; }
             
-            /* 表格樣式 (仿照 PDF) */
-            .check-table { width: 100%; border-collapse: collapse; font-family: "MingLiU", "PMingLiU", serif; } /* 使用細明體仿照公文 */
+            .check-table { width: 100%; border-collapse: collapse; font-family: "MingLiU", "PMingLiU", serif; }
             .check-table th, .check-table td { border: 1px solid #000; padding: 4px 8px; font-size: 14px; vertical-align: middle; }
             .check-header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 10px; font-family: "BiauKai", "DFKai-SB", serif; }
             .section-title { background-color: #f0f0f0; font-weight: bold; text-align: left; }
             
-            /* 簽名欄 */
-            .footer-section { margin-top: 20px; display: flex; justify-content: space-between; font-size: 16px; font-family: "BiauKai", serif; }
-            .sign-box { border-bottom: 1px solid #000; width: 180px; display: inline-block; height: 24px; }
+            /* 簽名區排版 */
+            .footer-grid { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-family: "BiauKai", serif; font-size: 16px; }
+            .sign-line { border-bottom: 1px solid #000; display: inline-block; width: 150px; height: 24px; }
         }
-        
-        /* 平常隱藏列印區 */
         #print-area { display: none; }
     </style>
 </head>
@@ -63,7 +55,6 @@
     <div class="tab-content">
         <div class="tab-pane fade show active" id="input-panel">
             <form id="inspectionForm">
-                
                 <div class="card">
                     <div class="card-header">📍 基本資料</div>
                     <div class="card-body">
@@ -74,7 +65,7 @@
                                 <div class="row g-2">
                                     <div class="col-6"><select class="form-select" id="districtSelect" required onchange="updateVillages()"><option value="" disabled selected>選擇區</option></select></div>
                                     <div class="col-6"><select class="form-select" id="villageSelect" required><option value="" disabled selected>選擇里</option></select></div>
-                                    <div class="col-12"><input type="text" class="form-control" id="detailAddress" placeholder="詳細地址 (如: 公園路123號)" required></div>
+                                    <div class="col-12"><input type="text" class="form-control" id="detailAddress" placeholder="詳細地址" required></div>
                                 </div>
                             </div>
                             <div class="col-12"><label class="text-muted small">稽查人員</label><input type="text" class="form-control" id="inspectorName" placeholder="小強/小明" required></div>
@@ -101,8 +92,8 @@
 
                 <div class="summary-box">
                     <div>
-                        <small class="text-muted d-block">狀態</small>
-                        <span id="statusText" class="fw-bold text-success">陽性孳生源為 0</span>
+                        <small class="text-muted d-block">總陽性數</small>
+                        <span id="totalPositiveDisplay" class="fw-bold text-success fs-5">0 處</span>
                     </div>
                     <div class="text-end me-3">
                         <small class="text-muted d-block">合計處數</small>
@@ -116,17 +107,30 @@
         <div class="tab-pane fade" id="query-panel">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">🔎 搜尋與列印</h5>
-                    <div class="row g-2 align-items-end">
-                        <div class="col-4"><label class="small text-muted">開始</label><input type="date" class="form-control" id="startDate"></div>
-                        <div class="col-4"><label class="small text-muted">結束</label><input type="date" class="form-control" id="endDate"></div>
-                        <div class="col-4"><button class="btn btn-primary w-100" onclick="performQuery()">查詢</button></div>
+                    <h5 class="card-title mb-3">🔎 搜尋條件</h5>
+                    
+                    <div class="mb-3">
+                        <select class="form-select" id="queryType" onchange="toggleQueryInputs()">
+                            <option value="date">📅 依日期區間查詢</option>
+                            <option value="inspector">👤 依稽查員姓名查詢</option>
+                        </select>
                     </div>
+
+                    <div id="dateQueryGroup" class="row g-2">
+                        <div class="col-6"><label class="small text-muted">開始</label><input type="date" class="form-control" id="startDate"></div>
+                        <div class="col-6"><label class="small text-muted">結束</label><input type="date" class="form-control" id="endDate"></div>
+                    </div>
+
+                    <div id="inspectorQueryGroup" class="d-none">
+                         <input type="text" class="form-control" id="queryInspectorValue" placeholder="輸入姓名 (如: 小強)">
+                    </div>
+
+                    <button class="btn btn-primary w-100 mt-3" onclick="performQuery()">查詢</button>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between mb-2">
-                <div class="form-check ms-2 align-self-center">
+            <div class="d-flex justify-content-between mb-2 align-items-center">
+                <div class="form-check ms-2">
                     <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll()">
                     <label class="form-check-label" for="selectAll">全選</label>
                 </div>
@@ -134,7 +138,7 @@
             </div>
 
             <div id="queryResults"></div>
-            <div class="text-center mt-5"><button class="btn btn-outline-secondary btn-sm" onclick="clearAllData()">🗑️ 清除所有資料</button></div>
+            <div class="text-center mt-5"><button class="btn btn-outline-secondary btn-sm" onclick="clearAllData()">🗑️ 清除資料</button></div>
         </div>
     </div>
 </div>
@@ -164,20 +168,21 @@
                         地址/地號
                         <div class="form-check form-check-inline m-0">
                             <input class="form-check-input" type="checkbox" id="sameAddressCheck" onchange="copyAddress()">
-                            <label class="form-check-label small text-primary" for="sameAddressCheck" style="cursor:pointer">📍 同稽查地點</label>
+                            <label class="form-check-label small text-primary" for="sameAddressCheck">📍 同稽查地點</label>
                         </div>
                     </label>
                     <input type="text" class="form-control" id="posAddress" placeholder="輸入地址">
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">陽性樣態 (可新增多項)</label>
+                    <label class="form-label">陽性樣態與數量</label>
                     <div class="input-group mb-2">
-                        <input type="text" class="form-control" id="posTypeInput" placeholder="例如：花瓶">
+                        <input type="text" class="form-control" id="posTypeInput" placeholder="樣態 (如:花瓶)" style="width: 50%;">
+                        <input type="number" class="form-control" id="posCountInput" placeholder="數量" min="1" value="1" style="width: 25%;">
                         <button class="btn btn-outline-secondary" type="button" onclick="addTypeTag()">➕ 加入</button>
                     </div>
                     <div id="typeTagsContainer" class="p-2 border rounded bg-light" style="min-height: 40px;">
-                        <span class="text-muted small fst-italic" id="noTagsHint">請輸入樣態並點擊加入...</span>
+                        <span class="text-muted small fst-italic" id="noTagsHint">請輸入樣態與數量...</span>
                     </div>
                 </div>
             </div>
@@ -205,11 +210,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // --- 資料結構 ---
-    let tempPositiveList = []; // 暫存陽性點 (地點+地址+樣態陣列)
-    let currentTypes = [];     // 暫存正在編輯的單一陽性點的多個樣態
+    // --- 變數與資料 ---
+    let tempPositiveList = []; // { place, address, detailedTypes: [{type, count}, ...] }
+    let currentDetailedTypes = []; // [{type: '花瓶', count: 2}, ...]
 
-    // 行政區資料
     const tainanData = {
         "北區": ["北門里", "大光里", "大港里", "公園里", "開元里", "長榮里"],
         "東區": ["崇學里", "崇明里", "成大里", "東門里"],
@@ -232,12 +236,10 @@
         "7. 其他 (竹筒、樹洞、溝)"
     ];
 
-    // --- 初始化 ---
     window.onload = function() {
         generateFormFields('part1_container', itemsPart1, 'p1');
         generateFormFields('part2_container', itemsPart2, 'p2');
         initLocationSelect();
-        
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('checkDate').value = today;
         document.getElementById('startDate').value = today;
@@ -250,7 +252,7 @@
         new bootstrap.Modal(document.getElementById('msgModal')).show();
     }
 
-    // --- 1. 介面生成 ---
+    // --- 1. 介面與計算 ---
     function initLocationSelect() {
         const districtSelect = document.getElementById('districtSelect');
         Object.keys(tainanData).forEach(d => {
@@ -293,37 +295,31 @@
         let totalWater = 0;
         document.querySelectorAll('input[data-group="p1"]').forEach(el => totalWaste += Number(el.value || 0));
         document.querySelectorAll('input[data-group="p2"]').forEach(el => totalWater += Number(el.value || 0));
-
         document.getElementById('totalWaste').innerText = totalWaste;
         document.getElementById('totalWater').innerText = totalWater;
     }
 
-    // --- 2. 陽性點功能 (核心修改) ---
-    
+    // --- 2. 陽性點 (支援數量) ---
     function openPositiveModal() {
-        // 重置 Modal 狀態
         document.getElementById('posPlace').value = '居家周圍';
         document.getElementById('posAddress').value = '';
         document.getElementById('sameAddressCheck').checked = false;
         document.getElementById('posTypeInput').value = '';
-        document.getElementById('noTagsHint').style.display = 'inline';
-        document.getElementById('typeTagsContainer').innerHTML = '<span class="text-muted small fst-italic" id="noTagsHint">請輸入樣態並點擊加入...</span>';
-        currentTypes = []; // 清空樣態暫存
-        
+        document.getElementById('posCountInput').value = '1';
+        currentDetailedTypes = [];
+        renderTypeTags();
         new bootstrap.Modal(document.getElementById('addPositiveModal')).show();
     }
 
-    // 功能 1: 複製地址
     function copyAddress() {
-        const isChecked = document.getElementById('sameAddressCheck').checked;
-        if (isChecked) {
+        if (document.getElementById('sameAddressCheck').checked) {
             const dist = document.getElementById('districtSelect').value;
             const vill = document.getElementById('villageSelect').value || "";
             const detail = document.getElementById('detailAddress').value;
             if(!dist) { 
-                showMsg("提示", "請先填寫基本資料中的地點"); 
-                document.getElementById('sameAddressCheck').checked = false;
-                return;
+                showMsg("提示", "請先填寫基本資料地點"); 
+                document.getElementById('sameAddressCheck').checked = false; 
+                return; 
             }
             document.getElementById('posAddress').value = `${dist}${vill}${detail}`;
         } else {
@@ -331,82 +327,87 @@
         }
     }
 
-    // 功能 2: 新增多個樣態
     function addTypeTag() {
-        const input = document.getElementById('posTypeInput');
-        const val = input.value.trim();
-        if (val) {
-            currentTypes.push(val);
+        const t = document.getElementById('posTypeInput').value.trim();
+        const c = parseInt(document.getElementById('posCountInput').value) || 1;
+        if (t) {
+            currentDetailedTypes.push({ type: t, count: c });
             renderTypeTags();
-            input.value = '';
-            input.focus();
+            document.getElementById('posTypeInput').value = '';
+            document.getElementById('posCountInput').value = '1';
+            document.getElementById('posTypeInput').focus();
         }
     }
 
     function renderTypeTags() {
         const container = document.getElementById('typeTagsContainer');
         const hint = document.getElementById('noTagsHint');
-        
-        if (currentTypes.length > 0) hint.style.display = 'none';
-        
-        // 重新渲染標籤
-        let html = '';
-        currentTypes.forEach((type, index) => {
-            html += `<span class="badge-tag">${type} <span style="cursor:pointer; margin-left:5px; color:#aaa;" onclick="removeTypeTag(${index})">&times;</span></span>`;
-        });
-        // 保持 hint 在 DOM 中
-        if (currentTypes.length === 0) html = '<span class="text-muted small fst-italic" id="noTagsHint">請輸入樣態並點擊加入...</span>';
-        container.innerHTML = html;
+        if (currentDetailedTypes.length > 0) {
+            hint.style.display = 'none';
+            let html = '';
+            currentDetailedTypes.forEach((item, index) => {
+                html += `<span class="badge-tag">${item.type} <span class="badge bg-secondary rounded-pill">${item.count}</span> <span style="cursor:pointer; margin-left:5px; color:#aaa;" onclick="removeTypeTag(${index})">&times;</span></span>`;
+            });
+            container.innerHTML = html;
+        } else {
+            hint.style.display = 'inline';
+            container.innerHTML = '<span class="text-muted small fst-italic" id="noTagsHint">請輸入樣態與數量...</span>';
+        }
     }
 
     function removeTypeTag(index) {
-        currentTypes.splice(index, 1);
+        currentDetailedTypes.splice(index, 1);
         renderTypeTags();
     }
 
     function confirmAddPositive() {
         const place = document.getElementById('posPlace').value;
         const address = document.getElementById('posAddress').value;
-        
         if(!address) { showMsg("錯誤", "請填寫地址"); return; }
-        if(currentTypes.length === 0) { showMsg("錯誤", "請至少新增一種陽性樣態"); return; }
+        if(currentDetailedTypes.length === 0) { showMsg("錯誤", "請至少新增一項"); return; }
 
-        tempPositiveList.push({ 
-            place: place, 
-            address: address, 
-            types: [...currentTypes] // 複製陣列
-        });
-        
+        tempPositiveList.push({ place, address, detailedTypes: [...currentDetailedTypes] });
         renderPositiveList();
         bootstrap.Modal.getInstance(document.getElementById('addPositiveModal')).hide();
     }
 
     function renderPositiveList() {
         const container = document.getElementById('positiveList');
-        const statusText = document.getElementById('statusText');
+        const display = document.getElementById('totalPositiveDisplay');
         
-        if (tempPositiveList.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center py-2">目前無紀錄</p>';
-            statusText.innerText = "陽性孳生源為 0";
-            statusText.className = "fw-bold text-success";
-        } else {
-            let html = '';
-            tempPositiveList.forEach((item, index) => {
-                const typesString = item.types.join("、");
-                html += `
-                    <div class="alert alert-warning d-flex justify-content-between align-items-center p-2 mb-2">
-                        <div>
-                            <strong>${index+1}. ${item.place}</strong><br>
-                            <small>${item.address}</small><br>
-                            <span class="badge bg-danger">${typesString}</span>
-                        </div>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="removePositive(${index})">刪除</button>
-                    </div>
-                `;
+        let totalCount = 0;
+        let html = '';
+
+        tempPositiveList.forEach((item, index) => {
+            // 計算該地點的總數
+            let subTotal = 0;
+            let typeStrArr = [];
+            item.detailedTypes.forEach(d => {
+                subTotal += d.count;
+                typeStrArr.push(`${d.type}*${d.count}`);
             });
-            container.innerHTML = html;
-            statusText.innerText = "需複查 ⚠️";
-            statusText.className = "fw-bold text-danger";
+            totalCount += subTotal;
+
+            html += `
+                <div class="alert alert-warning d-flex justify-content-between align-items-center p-2 mb-2">
+                    <div>
+                        <strong>${index+1}. ${item.place}</strong> <small class="text-muted">(${item.address})</small><br>
+                        <span class="small text-danger">${typeStrArr.join("、")}</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="removePositive(${index})">刪除</button>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html || '<p class="text-muted text-center py-2">目前無紀錄</p>';
+        
+        // 更新顯示
+        if(totalCount > 0) {
+            display.innerText = `${totalCount} 處 ⚠️`;
+            display.className = "fw-bold text-danger fs-5";
+        } else {
+            display.innerText = "0 處";
+            display.className = "fw-bold text-success fs-5";
         }
     }
 
@@ -421,9 +422,12 @@
         
         let envData = [];
         document.querySelectorAll('.count-input').forEach(input => {
-            // 儲存所有項目，即使是 0 也存，方便列印時填入空白或0
             envData.push({ name: input.getAttribute('data-name'), count: input.value, group: input.getAttribute('data-group') });
         });
+
+        // 計算陽性總數
+        let totalPos = 0;
+        tempPositiveList.forEach(p => p.detailedTypes.forEach(d => totalPos += d.count));
 
         const data = {
             id: Date.now(),
@@ -434,44 +438,62 @@
             inspector: document.getElementById('inspectorName').value,
             wasteCount: document.getElementById('totalWaste').innerText,
             waterCount: document.getElementById('totalWater').innerText,
+            totalPositiveCount: totalPos,
             positives: [...tempPositiveList],
             envDetails: envData
         };
 
-        let records = JSON.parse(localStorage.getItem('dengueRecords_v4')) || [];
+        let records = JSON.parse(localStorage.getItem('dengueRecords_v5')) || [];
         records.push(data);
-        localStorage.setItem('dengueRecords_v4', JSON.stringify(records));
-
+        localStorage.setItem('dengueRecords_v5', JSON.stringify(records));
         showMsg("成功", "資料已儲存！");
         
-        // Reset Logic
-        const currentDate = document.getElementById('checkDate').value;
-        const currentInspector = document.getElementById('inspectorName').value;
-        const currentDist = document.getElementById('districtSelect').value;
-        const currentVill = document.getElementById('villageSelect').value;
+        // Reset
+        const backupDate = document.getElementById('checkDate').value;
+        const backupInsp = document.getElementById('inspectorName').value;
+        const backupDist = document.getElementById('districtSelect').value;
+        const backupVill = document.getElementById('villageSelect').value;
 
         this.reset();
         tempPositiveList = [];
         renderPositiveList();
         
-        // Restore context
-        document.getElementById('checkDate').value = currentDate;
-        document.getElementById('inspectorName').value = currentInspector;
-        document.getElementById('districtSelect').value = currentDist;
+        document.getElementById('checkDate').value = backupDate;
+        document.getElementById('inspectorName').value = backupInsp;
+        document.getElementById('districtSelect').value = backupDist;
         updateVillages();
-        document.getElementById('villageSelect').value = currentVill;
+        document.getElementById('villageSelect').value = backupVill;
         calculateTotal();
     });
 
-    // --- 4. 查詢與列印 (重點修復) ---
+    // --- 4. 查詢 (選項恢復) ---
+    function toggleQueryInputs() {
+        const type = document.getElementById('queryType').value;
+        const dateGroup = document.getElementById('dateQueryGroup');
+        const inspectorGroup = document.getElementById('inspectorQueryGroup');
+        if (type === 'date') {
+            dateGroup.classList.remove('d-none');
+            inspectorGroup.classList.add('d-none');
+        } else {
+            dateGroup.classList.add('d-none');
+            inspectorGroup.classList.remove('d-none');
+        }
+    }
 
     function performQuery() {
-        const start = document.getElementById('startDate').value;
-        const end = document.getElementById('endDate').value;
+        const type = document.getElementById('queryType').value;
         const resultDiv = document.getElementById('queryResults');
-        
-        let records = JSON.parse(localStorage.getItem('dengueRecords_v4')) || [];
-        let filtered = records.filter(r => r.date >= start && r.date <= end);
+        let records = JSON.parse(localStorage.getItem('dengueRecords_v5')) || [];
+        let filtered = [];
+
+        if (type === 'date') {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            filtered = records.filter(r => r.date >= start && r.date <= end);
+        } else {
+            const val = document.getElementById('queryInspectorValue').value.trim();
+            filtered = records.filter(r => r.inspector.includes(val));
+        }
         filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (filtered.length === 0) {
@@ -481,10 +503,11 @@
 
         let html = '';
         filtered.forEach(r => {
-            const hasPositive = r.positives && r.positives.length > 0;
-            const statusBadge = hasPositive 
-                ? `<span class="badge bg-danger">需複查 (${r.positives.length}處)</span>` 
-                : `<span class="badge bg-success">陽性為 0</span>`;
+            // 計算陽性總數 (兼容舊資料)
+            let pCount = r.totalPositiveCount !== undefined ? r.totalPositiveCount : 0;
+            const statusBadge = pCount > 0 
+                ? `<span class="badge bg-danger">陽性: ${pCount}</span>` 
+                : `<span class="badge bg-success">陽性: 0</span>`;
 
             html += `
                 <div class="card mb-2">
@@ -497,7 +520,11 @@
                                 <h6 class="fw-bold mb-1">${r.date} | ${r.district}${r.village}</h6>
                                 ${statusBadge}
                             </div>
-                            <div class="small text-muted mb-1">${r.address} (稽查員: ${r.inspector})</div>
+                            <div class="small text-muted mb-2">${r.address} (稽查員: ${r.inspector})</div>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-light text-dark border">廢棄: ${r.wasteCount}</span>
+                                <span class="badge bg-light text-dark border">積水: ${r.waterCount}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -511,37 +538,28 @@
         document.querySelectorAll('.report-check').forEach(ck => ck.checked = checked);
     }
 
-    // 列印功能：產出 HTML 並列印
     function printSelectedReports() {
         const checkboxes = document.querySelectorAll('.report-check:checked');
         if (checkboxes.length === 0) { showMsg("提示", "請勾選要列印的資料"); return; }
-
-        const allRecords = JSON.parse(localStorage.getItem('dengueRecords_v4')) || [];
+        const allRecords = JSON.parse(localStorage.getItem('dengueRecords_v5')) || [];
         const printArea = document.getElementById('print-area');
         printArea.innerHTML = ''; 
 
         checkboxes.forEach(box => {
-            const id = parseInt(box.value);
-            const data = allRecords.find(r => r.id === id);
-            if(data) {
-                printArea.innerHTML += generatePrintHtml(data);
-            }
+            const data = allRecords.find(r => r.id === parseInt(box.value));
+            if(data) printArea.innerHTML += generatePrintHtml(data);
         });
-
-        // 延遲一點點確保 DOM 渲染完成
-        setTimeout(() => {
-            window.print();
-        }, 500);
+        setTimeout(() => window.print(), 500);
     }
 
     function generatePrintHtml(data) {
-        // Helper to find count
         const getVal = (itemName) => {
             const found = data.envDetails.find(i => i.name.startsWith(itemName));
-            return (found && found.count > 0) ? found.count : ""; // 若為0則留白或顯示空
+            return (found && found.count > 0) ? found.count : "";
         };
+        const pCount = data.totalPositiveCount || 0;
 
-        // 1. 環境複查表 HTML (第一頁)
+        // Page 1: 環境檢查
         let page1 = `
         <div class="print-page">
             <div class="check-header">臺南市政府登革熱病媒蚊孳生源檢查表</div>
@@ -582,45 +600,45 @@
             </table>
 
             <div style="margin-top: 10px; border: 1px solid black; padding: 10px;">
-                <div style="display:flex; justify-content:space-between;">
-                    <span><strong>總計:</strong> 積水容器 ${data.waterCount} 處</span>
-                    <span>判定: ${data.positives.length > 0 ? "不合格 ❌" : "合格 ⭕"}</span>
-                </div>
+                <span><strong>總計:</strong> 積水容器 ${data.waterCount} 處</span>
             </div>
 
-            <div class="footer-section">
+            <div class="footer-grid">
                 <div>
                     <div>環保機關/公所機關檢查人簽名:</div>
-                    <div class="sign-box"></div>
+                    <div class="sign-line" style="margin-top:35px;"></div>
                 </div>
                 <div>
                     <div>檢查日期: ${data.date}</div>
-                    <div style="margin-top:10px;">檢查員簽名: <span style="font-size:18px;">${data.inspector}</span></div>
+                    <div style="margin-top:10px;">稽查人員姓名: ${data.inspector}</div>
+                    <div style="margin-top:10px;">稽查人員簽名: <div class="sign-line"></div></div>
                 </div>
             </div>
         </div>
         `;
 
-        // 2. 陽性孳生源清單 HTML (如果有陽性點，生成第二頁)
+        // Page 2: 陽性紀錄 (分開寫邏輯)
         let page2 = "";
-        if (data.positives.length > 0) {
+        if (pCount > 0) {
             let rows = "";
-            data.positives.forEach((p, idx) => {
-                // 將樣態陣列轉為字串
-                let typeStr = p.types.join("、");
-                rows += `
-                    <tr>
-                        <td class="text-center">${idx + 1}</td>
-                        <td>${p.place}</td>
-                        <td>${p.address}</td>
-                        <td>${typeStr}</td>
-                    </tr>
-                `;
+            let itemIndex = 1;
+            
+            data.positives.forEach(p => {
+                p.detailedTypes.forEach(d => {
+                    rows += `
+                        <tr>
+                            <td class="text-center">${itemIndex++}</td>
+                            <td>${p.place}</td>
+                            <td>${p.address}</td>
+                            <td>${d.type} (數量: ${d.count})</td>
+                        </tr>
+                    `;
+                });
             });
 
-            // 補滿空行以美觀
-            for(let i=data.positives.length; i<10; i++) {
-                rows += `<tr><td>${i+1}</td><td></td><td></td><td></td></tr>`;
+            // 補空行
+            for(let i=itemIndex; i<=10; i++) {
+                rows += `<tr><td>${i}</td><td></td><td></td><td></td></tr>`;
             }
 
             page2 = `
@@ -638,24 +656,21 @@
                             <th style="width:30%">陽性樣態 (容器種類)</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${rows}
-                    </tbody>
+                    <tbody>${rows}</tbody>
                 </table>
-                <div class="footer-section" style="margin-top:20px;">
+                <div class="footer-grid" style="margin-top:30px;">
                      <div>製表日期: ${data.date}</div>
                      <div>稽查員: ${data.inspector}</div>
                 </div>
             </div>
             `;
         }
-
         return page1 + page2;
     }
 
     function clearAllData() {
-        if(confirm("確定要清空所有資料嗎？")) {
-            localStorage.removeItem('dengueRecords_v4');
+        if(confirm("確定刪除所有資料？")) {
+            localStorage.removeItem('dengueRecords_v5');
             document.getElementById('queryResults').innerHTML = '';
         }
     }
