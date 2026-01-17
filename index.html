@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登革熱稽查回報系統 V6</title>
+    <title>登革熱稽查回報系統 V7</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -28,8 +28,16 @@
         @media print {
             body > *:not(#print-area) { display: none !important; }
             #print-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; background: white; z-index: 9999; }
-            .print-page { width: 100%; height: 100%; page-break-after: always; padding: 20px; box-sizing: border-box; }
-            .print-page:last-child { page-break-after: auto; }
+            
+            /* 強制分頁設定 */
+            .print-page { 
+                width: 100%; 
+                height: 100vh; /* 佔滿一頁 */
+                page-break-after: always; /* 每一頁結束後都強制分頁 */
+                padding: 20px; 
+                box-sizing: border-box; 
+                position: relative;
+            }
             
             .check-table { width: 100%; border-collapse: collapse; font-family: "MingLiU", "PMingLiU", serif; }
             .check-table th, .check-table td { border: 1px solid #000; padding: 4px 8px; font-size: 14px; vertical-align: middle; }
@@ -112,23 +120,19 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <h5 class="card-title mb-3">🔎 搜尋條件</h5>
-                    
                     <div class="mb-3">
                         <select class="form-select" id="queryType" onchange="toggleQueryInputs()">
                             <option value="date">📅 依日期區間查詢</option>
                             <option value="inspector">👤 依稽查員姓名查詢</option>
                         </select>
                     </div>
-
                     <div id="dateQueryGroup" class="row g-2">
                         <div class="col-6"><label class="small text-muted">開始</label><input type="date" class="form-control" id="startDate"></div>
                         <div class="col-6"><label class="small text-muted">結束</label><input type="date" class="form-control" id="endDate"></div>
                     </div>
-
                     <div id="inspectorQueryGroup" class="d-none">
                          <input type="text" class="form-control" id="queryInspectorValue" placeholder="輸入姓名 (如: 小強)">
                     </div>
-
                     <button class="btn btn-primary w-100 mt-3" onclick="performQuery()">查詢</button>
                 </div>
             </div>
@@ -166,7 +170,6 @@
                         <option value="其他">其他</option>
                     </select>
                 </div>
-                
                 <div class="mb-3">
                     <label class="form-label d-flex justify-content-between">
                         地址/地號
@@ -177,7 +180,6 @@
                     </label>
                     <input type="text" class="form-control" id="posAddress" placeholder="輸入地址">
                 </div>
-
                 <div class="mb-3">
                     <label class="form-label">陽性樣態與數量</label>
                     <div class="input-group mb-2">
@@ -303,9 +305,7 @@
         document.getElementById('totalWater').innerText = totalWater;
     }
 
-    // --- 2. 陽性點 (修正重點) ---
-    
-    // 修正 1: 使用 getOrCreateInstance 確保 Modal 狀態正確
+    // --- 2. 陽性點 ---
     function getModalInstance() {
         return bootstrap.Modal.getOrCreateInstance(document.getElementById('addPositiveModal'));
     }
@@ -318,7 +318,6 @@
         document.getElementById('posCountInput').value = '1';
         currentDetailedTypes = [];
         renderTypeTags();
-        
         getModalInstance().show();
     }
 
@@ -350,16 +349,10 @@
         }
     }
 
-    // 修正 3: 確保樣態顯示不會消失
     function renderTypeTags() {
         const container = document.getElementById('typeTagsContainer');
-        const hint = document.getElementById('noTagsHint');
-        
-        // 清空容器，只保留 hint 元素 (暫時移除，重新判斷)
         container.innerHTML = ''; 
-        
         if (currentDetailedTypes.length > 0) {
-            // 重建所有標籤
             currentDetailedTypes.forEach((item, index) => {
                 const tag = document.createElement('span');
                 tag.className = 'badge-tag';
@@ -367,7 +360,6 @@
                 container.appendChild(tag);
             });
         } else {
-            // 顯示提示
              container.innerHTML = '<span class="text-muted small fst-italic w-100" id="noTagsHint">請輸入樣態與數量...</span>';
         }
     }
@@ -385,18 +377,14 @@
 
         tempPositiveList.push({ place, address, detailedTypes: [...currentDetailedTypes] });
         renderPositiveList();
-        
-        // 安全關閉
         getModalInstance().hide();
     }
 
     function renderPositiveList() {
         const container = document.getElementById('positiveList');
         const display = document.getElementById('totalPositiveDisplay');
-        
         let totalCount = 0;
         let html = '';
-
         tempPositiveList.forEach((item, index) => {
             let subTotal = 0;
             let typeStrArr = [];
@@ -405,7 +393,6 @@
                 typeStrArr.push(`${d.type}*${d.count}`);
             });
             totalCount += subTotal;
-
             html += `
                 <div class="alert alert-warning d-flex justify-content-between align-items-center p-2 mb-2">
                     <div>
@@ -416,7 +403,6 @@
                 </div>
             `;
         });
-
         container.innerHTML = html || '<p class="text-muted text-center py-2">目前無紀錄</p>';
         
         if(totalCount > 0) {
@@ -459,9 +445,9 @@
             envDetails: envData
         };
 
-        let records = JSON.parse(localStorage.getItem('dengueRecords_v6')) || [];
+        let records = JSON.parse(localStorage.getItem('dengueRecords_v7')) || [];
         records.push(data);
-        localStorage.setItem('dengueRecords_v6', JSON.stringify(records));
+        localStorage.setItem('dengueRecords_v7', JSON.stringify(records));
         showMsg("成功", "資料已儲存！");
         
         const backupDate = document.getElementById('checkDate').value;
@@ -498,7 +484,7 @@
     function performQuery() {
         const type = document.getElementById('queryType').value;
         const resultDiv = document.getElementById('queryResults');
-        let records = JSON.parse(localStorage.getItem('dengueRecords_v6')) || [];
+        let records = JSON.parse(localStorage.getItem('dengueRecords_v7')) || [];
         let filtered = [];
 
         if (type === 'date') {
@@ -555,7 +541,7 @@
     function printSelectedReports() {
         const checkboxes = document.querySelectorAll('.report-check:checked');
         if (checkboxes.length === 0) { showMsg("提示", "請勾選要列印的資料"); return; }
-        const allRecords = JSON.parse(localStorage.getItem('dengueRecords_v6')) || [];
+        const allRecords = JSON.parse(localStorage.getItem('dengueRecords_v7')) || [];
         const printArea = document.getElementById('print-area');
         printArea.innerHTML = ''; 
 
@@ -566,12 +552,31 @@
         setTimeout(() => window.print(), 500);
     }
 
+    // 核心修正：報表生成邏輯 (精準比對)
     function generatePrintHtml(data) {
-        const getVal = (itemName) => {
-            const found = data.envDetails.find(i => i.name.startsWith(itemName));
+        // 使用完整的項目名稱來精準抓取數據
+        const getCountByFullName = (fullName) => {
+            const found = data.envDetails.find(i => i.name === fullName);
             return (found && found.count > 0) ? found.count : "";
         };
+
         const pCount = data.totalPositiveCount || 0;
+
+        // 生成 Part 1 表格行
+        let rowsPart1 = "";
+        itemsPart1.forEach(item => {
+            const shortName = item; // 這裡直接用完整名稱
+            const val = getCountByFullName(item);
+            rowsPart1 += `<tr><td>${shortName}</td><td class="text-center">${val}</td></tr>`;
+        });
+
+        // 生成 Part 2 表格行
+        let rowsPart2 = "";
+        itemsPart2.forEach(item => {
+            const shortName = item;
+            const val = getCountByFullName(item);
+            rowsPart2 += `<tr><td>${shortName}</td><td class="text-center">${val}</td></tr>`;
+        });
 
         // Page 1
         let page1 = `
@@ -589,32 +594,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td>1、空瓶、空罐…等</td><td class="text-center">${getVal("1.")}</td></tr>
-                    <tr><td>2、甕、壺(陶瓷水缸等)</td><td class="text-center">${getVal("2.")}</td></tr>
-                    <tr><td>3、鍋、壺、冷氣接水桶</td><td class="text-center">${getVal("3.")}</td></tr>
-                    <tr><td>4、杯子、碟子、盤子、碗、破裂磁器面盆</td><td class="text-center">${getVal("4.")}</td></tr>
-                    <tr><td>5、空保麗龍、馬槽水………等</td><td class="text-center">${getVal("5.")}</td></tr>
-                    <tr><td>6、桶子(鐵桶、塑膠桶、寵物水盤)</td><td class="text-center">${getVal("6.")}</td></tr>
-                    <tr><td>7、椰子殼、椰子葉捲、……等</td><td class="text-center">${getVal("7.")}</td></tr>
-                    <tr><td>8、廢輪胎</td><td class="text-center">${getVal("8.")}</td></tr>
-                    <tr><td>9、廢傢俱</td><td class="text-center">${getVal("9.")}</td></tr>
-                    <tr><td>10、廢帆布</td><td class="text-center">${getVal("10.")}</td></tr>
-                    <tr><td>11、空地未整理</td><td class="text-center">${getVal("11.")}</td></tr>
-                    <tr><td>12、空屋未整理</td><td class="text-center">${getVal("12.")}</td></tr>
-                    <tr><td>13、其他(任何廢棄的容器或雜物)</td><td class="text-center">${getVal("13.")}</td></tr>
+                    ${rowsPart1}
                     <tr class="section-title"><td colspan="2">二、室內外發現下列容器、雜物或場所積水未洗刷乾淨</td></tr>
-                    <tr><td>1、插花容器(花盆、花瓶等)</td><td class="text-center">${getVal("1.")}</td></tr>
-                    <tr><td>2、貯水容器(水缸、貯水槽、水桶等)</td><td class="text-center">${getVal("2.")}</td></tr>
-                    <tr><td>3、積水的地下室</td><td class="text-center">${getVal("3.")}</td></tr>
-                    <tr><td>4、輪胎或排水管、水塔</td><td class="text-center">${getVal("4.")}</td></tr>
-                    <tr><td>5、冰箱除霜底盤(水盤)</td><td class="text-center">${getVal("5.")}</td></tr>
-                    <tr><td>6、盆栽植物墊盤(水盤)</td><td class="text-center">${getVal("6.")}</td></tr>
-                    <tr><td>7、其他(竹筒、樹洞、溝、人手孔蓋..等)</td><td class="text-center">${getVal("7.")}</td></tr>
+                    ${rowsPart2}
                 </tbody>
             </table>
 
             <div style="margin-top: 10px; border: 1px solid black; padding: 10px;">
-                <span><strong>總計:</strong> 積水容器 ${data.waterCount} 處</span>
+                <span><strong>總計:</strong> 廢棄容器 ${data.wasteCount} 處 / 積水容器 ${data.waterCount} 處</span>
             </div>
 
             <div class="footer-grid">
@@ -654,7 +641,6 @@
                 rows += `<tr><td>${i}</td><td></td><td></td><td></td></tr>`;
             }
 
-            // 修正重點 4: 報表末端顯示判斷結果
             page2 = `
             <div class="print-page">
                 <div class="check-header">登革熱病媒蚊陽性孳生源紀錄表</div>
@@ -689,7 +675,7 @@
 
     function clearAllData() {
         if(confirm("確定刪除所有資料？")) {
-            localStorage.removeItem('dengueRecords_v6');
+            localStorage.removeItem('dengueRecords_v7');
             document.getElementById('queryResults').innerHTML = '';
         }
     }
